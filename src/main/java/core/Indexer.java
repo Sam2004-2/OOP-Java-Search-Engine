@@ -1,16 +1,13 @@
 package core;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
+import java.util.regex.*;
 
 public class Indexer {
-    private Map<String, Set<String>> index;
-
-    public Indexer() {
-        this.index = new HashMap<>();
-    }
+    private Map<String, Set<String>> index = new HashMap<>();
+    private Map<String, Integer> totalWords = new HashMap<>();
 
     public void indexDirectory(String directoryPath) {
         try {
@@ -29,14 +26,23 @@ public class Indexer {
     }
 
     private void indexFile(String filePath) throws IOException {
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
-        for (String line : lines) {
-            String[] words = line.split("\\W+");
-            for (String word : words) {
-                word = word.toLowerCase(); // Normalize case for indexing
-                index.computeIfAbsent(word, k -> new HashSet<>()).add(filePath);
+        Pattern pattern = Pattern.compile("\\w+");
+        int totalWordCount = 0;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
+                    String word = matcher.group().toLowerCase();
+                    index.computeIfAbsent(word, k -> new HashSet<>()).add(filePath);
+                    totalWordCount++;
+                }
             }
         }
+
+        // Update the total words count for the file
+        totalWords.put(filePath, totalWordCount);
     }
 
     public Set<String> search(String term) {
