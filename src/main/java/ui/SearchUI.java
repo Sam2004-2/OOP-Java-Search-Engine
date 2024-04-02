@@ -36,6 +36,13 @@ public class SearchUI extends JFrame {
         setVisible(true);
     }
 
+
+    private JButton createSearchButton() {
+        JButton button = new JButton("Search");
+        button.addActionListener(e -> performSearch());
+        return button;
+    }
+
     /**
      * Initializes the components of the UI including layout, panels, and event listeners.
      */
@@ -46,7 +53,6 @@ public class SearchUI extends JFrame {
         searchField = new JTextField(20);
 
         // Initialize the search and choose directory buttons
-        searchButton = new JButton("Search");
         chooseButton = new JButton("Choose Directory or File");
 
         // Initialize the tabbed pane
@@ -95,10 +101,9 @@ public class SearchUI extends JFrame {
         add(fileSelectionPanel, BorderLayout.EAST);
 
         // Adjust search button to trigger search based on active tab
-        searchButton.addActionListener(e -> performSearch());
-        JPanel searchButtonPanel = new JPanel();
-        searchButtonPanel.add(searchButton);
-        add(searchButtonPanel, BorderLayout.SOUTH);
+        exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
+        separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
+        wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
 
         pack(); // Adjust window size to fit all components
     }
