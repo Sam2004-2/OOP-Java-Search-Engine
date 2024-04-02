@@ -42,7 +42,7 @@ public class Indexer {
      * @param filePath The path of the file to index.
      * @throws IOException If an I/O error occurs reading from the file.
      */
-    private void indexFile(String filePath) throws IOException {
+    public void indexFile(String filePath) throws IOException {
         Pattern pattern = Pattern.compile("\\w+");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -117,7 +117,8 @@ public class Indexer {
         Map<String, Integer> cumulativeResults = new HashMap<>();
 
         index.keySet().forEach(word -> {
-            if (pattern.matcher(word).matches()) {
+            // Convert the word from the index to lowercase before matching
+            if (pattern.matcher(word.toLowerCase()).matches()) {
                 List<Map.Entry<String, Integer>> results = search(word);
                 results.forEach(entry -> cumulativeResults.merge(entry.getKey(), entry.getValue(), Integer::sum));
             }
@@ -128,3 +129,4 @@ public class Indexer {
                 .collect(Collectors.toList());
     }
 }
+

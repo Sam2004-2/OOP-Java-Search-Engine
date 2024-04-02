@@ -5,7 +5,6 @@ import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.List;
@@ -193,25 +192,23 @@ public class SearchUI extends JFrame {
      * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
      */
     private void performSearch() {
-        String query = searchField.getText();
-        List<Map.Entry<String, Integer>> searchResults = new ArrayList<>();
-        // Determine the active tab
-        int selectedIndex = searchTabs.getSelectedIndex();
-        switch (selectedIndex) {
-            case 0: // Exact match
-                searchResults = search.performSearch(query);
+        String term = searchField.getText();
+        List<Map.Entry<String, Integer>> results;
+
+        switch (searchTabs.getSelectedIndex()) {
+            case 0: // 
+                results = search.performSearch(term);
                 break;
-            case 1: // Comma-separated words
-                searchResults = search.performCommaSeparatedSearch(query);
+            case 1: //
+                results = search.performCommaSeparatedSearch(term);
                 break;
-            case 2: // Wildcard
-                searchResults = search.performWildcardSearch(query);
+            case 2:
+                results = search.performWildcardSearch(term);
                 break;
             default:
-                JOptionPane.showMessageDialog(this, "Invalid search option.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }
-        updateSearchResults(searchResults);
+        updateSearchResults(results);
     }
 
 }
