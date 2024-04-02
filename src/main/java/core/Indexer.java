@@ -67,11 +67,20 @@ public class Indexer {
      * @return A list of Map entries, where each entry represents a file path and the count of the term's occurrences in that file, sorted by the count in descending order.
      */
     public List<Map.Entry<String, Integer>> search(String term) {
-        Map<String, Integer> results = index.getOrDefault(term.toLowerCase(), Collections.emptyMap());
-        return results.entrySet().stream()
+        term = term.toLowerCase(); 
+        Map<String, Integer> cumulativeResults = new HashMap<>();
+        for (String indexedWord : index.keySet()) {
+            if (indexedWord.toLowerCase().equals(term)) {
+                Map<String, Integer> fileCounts = index.get(indexedWord);
+
+                fileCounts.forEach((filePath, count) -> cumulativeResults.merge(filePath, count, Integer::sum));
+            }
+        }
+        return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
     }
+
 
     // These are new methods for Advanced Searches yet to be fully implemented
 

@@ -179,12 +179,14 @@ public class SearchUI extends JFrame {
             JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
         } else {
             DefaultListModel<String> listModel = new DefaultListModel<>();
-            for (Map.Entry<String, Integer> entry : searchResults) {
-                listModel.addElement(entry.getKey() + ": " + entry.getValue() + " occurrences");
-            }
+            searchResults.forEach(entry -> {
+                String displayText = String.format("File: %s - Occurrences: %d", entry.getKey(), entry.getValue());
+                listModel.addElement(displayText);
+            });
             resultList.setModel(listModel);
         }
     }
+
 
 
     /**

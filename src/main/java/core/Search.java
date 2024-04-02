@@ -11,7 +11,6 @@ public class Search {
     }
 
     public List<Map.Entry<String, Integer>> performSearch(String term) {
-        // Default to exact match search
         return indexer.search(term);
     }
 
