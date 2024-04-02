@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 
 
@@ -32,41 +33,41 @@ public class SearchUI extends JFrame {
 
     private void initComponents() {
         setLayout(new BorderLayout());
-    
-        // File selection area
+
+
         JPanel fileSelectionPanel = new JPanel();
-        fileSelectionPanel.setLayout(new BoxLayout(fileSelectionPanel, BoxLayout.Y_AXIS));
-        fileSelectionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    
-        chosenPathDisplay = new JTextArea(2, 20);
+        fileSelectionPanel.setLayout(new BorderLayout());
+
+        chosenPathDisplay = new JTextArea(10, 20);
         chosenPathDisplay.setEditable(false);
         JScrollPane pathScrollPane = new JScrollPane(chosenPathDisplay);
         pathScrollPane.setBorder(BorderFactory.createTitledBorder("Chosen Path"));
-        fileSelectionPanel.add(pathScrollPane);
-    
+        fileSelectionPanel.add(pathScrollPane, BorderLayout.NORTH);
+
         chooseButton = new JButton("Choose Directory or File");
         chooseButton.addActionListener(e -> chooseDirectoryOrFile());
-        fileSelectionPanel.add(chooseButton);
-    
-        add(fileSelectionPanel, BorderLayout.NORTH);
-    
-        // Search area
+        fileSelectionPanel.add(chooseButton, BorderLayout.SOUTH);
+
         JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
-    
+        searchPanel.setLayout(new BorderLayout());
+
         searchField = new JTextField(20);
         searchField.setMaximumSize(searchField.getPreferredSize());
-        searchPanel.add(searchField);
-    
+        searchPanel.add(searchField, BorderLayout.NORTH);
+
         searchButton = new JButton("Search");
-        searchButton.setEnabled(false); // Initially disabled
+        searchButton.setEnabled(false);
         searchButton.addActionListener(e -> performSearch());
-        searchPanel.add(searchButton);
-    
+        searchPanel.add(searchButton, BorderLayout.SOUTH);
+
         resultList = new JList<>();
-        searchPanel.add(new JScrollPane(resultList));
-    
-        add(searchPanel, BorderLayout.CENTER);
+        searchPanel.add(new JScrollPane(resultList), BorderLayout.CENTER);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileSelectionPanel, searchPanel);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setDividerLocation(400);
+
+        add(splitPane, BorderLayout.CENTER);
     }
 
     private void chooseDirectoryOrFile() {
@@ -96,14 +97,20 @@ public class SearchUI extends JFrame {
             for (File file : files) {
                 if (file.isFile()) {
                     JCheckBox checkBox = new JCheckBox(file.getName());
-                    checkBox.addItemListener(e -> {
-                        if (e.getStateChange() == ItemEvent.SELECTED) {
-                            selectedFiles.add(file.getAbsolutePath());
-                        } else {
-                            selectedFiles.remove(file.getAbsolutePath());
+                    checkBox.addItemListener(new ItemListener() { // Add item listener to each checkbox
+                        @Override
+                        public void itemStateChanged(ItemEvent e) {
+                            if (e.getStateChange() == ItemEvent.SELECTED) { // Add to selectedFiles if selected
+                                System.out.println("Selected: " + file.getName());
+                                selectedFiles.add(file.getAbsolutePath());
+                            } else if (e.getStateChange() == ItemEvent.DESELECTED) { // Remove from selectedFiles if deselected
+                                System.out.println("Deselected: " + file.getName());
+                                selectedFiles.remove(file.getAbsolutePath());
+                            }
+                            System.out.println(selectedFiles);
+                            searchButton.setEnabled(!selectedFiles.isEmpty());
+                            updateChosenPathDisplay();
                         }
-                        searchButton.setEnabled(!selectedFiles.isEmpty());
-                        updateChosenPathDisplay(); // Update the display and index the files
                     });
                     checkBoxPanel.add(checkBox);
                 }
@@ -125,6 +132,27 @@ public class SearchUI extends JFrame {
             .map(Path::toString)
             .forEach(indexer::indexDirectory);
         searchButton.setEnabled(!selectedFiles.isEmpty());
+
+
+        JMenu selectedFilesMenu = new JMenu("Selected Files");
+        for (String filePath : selectedFiles) {
+            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(filePath, true);
+            menuItem.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    selectedFiles.remove(filePath);
+                    updateChosenPathDisplay();
+                }
+            });
+            selectedFilesMenu.add(menuItem);
+        }
+
+
+        JMenuBar menuBar = getJMenuBar();
+        if (menuBar == null) {
+            menuBar = new JMenuBar();
+            setJMenuBar(menuBar);
+        }
+        menuBar.add(selectedFilesMenu);
     }
 
 
