@@ -47,45 +47,41 @@ public class SearchUI extends JFrame {
      * Initializes the components of the UI including layout, panels, and event listeners.
      */
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10)); // Main layout with padding
+        setLayout(new BorderLayout(10, 10));
 
-        // Initialize search field that might be reused across tabs
         searchField = new JTextField(20);
 
-        // Initialize the search and choose directory buttons
+
         chooseButton = new JButton("Choose Directory or File");
 
-        // Initialize the tabbed pane
+
         searchTabs = new JTabbedPane();
 
-        // Initialize panels for each search mode
+
         JPanel exactSearchPanel = new JPanel(new BorderLayout());
         JPanel separateWordsSearchPanel = new JPanel(new BorderLayout());
         JPanel wildcardSearchPanel = new JPanel(new BorderLayout());
 
-        // Example of reusing the search field in each tab
-        // Note: If you prefer separate fields for each search type, initialize them individually
+
         exactSearchPanel.add(new JLabel("Enter exact phrase:"), BorderLayout.NORTH);
         exactSearchPanel.add(searchField, BorderLayout.CENTER);
 
-        // Placeholder panels for other search modes
+
         separateWordsSearchPanel.add(new JLabel("Enter words, separated by commas:"), BorderLayout.NORTH);
         separateWordsSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
 
         wildcardSearchPanel.add(new JLabel("Enter search pattern with wildcards (*):"), BorderLayout.NORTH);
         wildcardSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
 
-        // Add tabs to the tabbed pane
         searchTabs.addTab("Exact", exactSearchPanel);
         searchTabs.addTab("Separate Words", separateWordsSearchPanel);
         searchTabs.addTab("Wildcards", wildcardSearchPanel);
 
-        // Results list initialization
         resultList = new JList<>();
         JScrollPane listScrollPane = new JScrollPane(resultList);
         listScrollPane.setBorder(BorderFactory.createTitledBorder("Search Results"));
 
-        // Directory chooser section
+
         JPanel fileSelectionPanel = new JPanel(new BorderLayout());
         chosenPathDisplay = new JTextArea(5, 20);
         chosenPathDisplay.setEditable(false);
@@ -95,17 +91,17 @@ public class SearchUI extends JFrame {
         fileSelectionPanel.add(pathScrollPane, BorderLayout.CENTER);
         fileSelectionPanel.add(chooseButton, BorderLayout.SOUTH);
 
-        // Assembling the main layout
+
         add(searchTabs, BorderLayout.NORTH);
         add(listScrollPane, BorderLayout.CENTER);
         add(fileSelectionPanel, BorderLayout.EAST);
 
-        // Adjust search button to trigger search based on active tab
+
         exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
 
-        pack(); // Adjust window size to fit all components
+        pack();
     }
 
 
@@ -173,7 +169,7 @@ public class SearchUI extends JFrame {
                 .map(Path::getParent)
                 .distinct()
                 .map(Path::toString)
-                .forEach(path -> search.indexDirectory(path)); // Adjusted to use the Search instance
+                .forEach(path -> search.indexDirectory(path));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
