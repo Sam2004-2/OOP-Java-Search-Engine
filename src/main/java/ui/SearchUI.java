@@ -25,6 +25,7 @@ public class SearchUI extends JFrame {
     private Search search;
     private JTextArea chosenPathDisplay;
     private Set<String> selectedFiles = new HashSet<>();
+    private JTabbedPane searchTabs;
 
     public SearchUI(Search search) {
         this.search = search;
@@ -39,36 +40,69 @@ public class SearchUI extends JFrame {
      * Initializes the components of the UI including layout, panels, and event listeners.
      */
     private void initComponents() {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10)); // Main layout with padding
 
+        // Initialize search field that might be reused across tabs
+        searchField = new JTextField(20);
+
+        // Initialize the search and choose directory buttons
+        searchButton = new JButton("Search");
+        chooseButton = new JButton("Choose Directory or File");
+
+        // Initialize the tabbed pane
+        searchTabs = new JTabbedPane();
+
+        // Initialize panels for each search mode
+        JPanel exactSearchPanel = new JPanel(new BorderLayout());
+        JPanel separateWordsSearchPanel = new JPanel(new BorderLayout());
+        JPanel wildcardSearchPanel = new JPanel(new BorderLayout());
+
+        // Example of reusing the search field in each tab
+        // Note: If you prefer separate fields for each search type, initialize them individually
+        exactSearchPanel.add(new JLabel("Enter exact phrase:"), BorderLayout.NORTH);
+        exactSearchPanel.add(searchField, BorderLayout.CENTER);
+
+        // Placeholder panels for other search modes
+        separateWordsSearchPanel.add(new JLabel("Enter words, separated by commas:"), BorderLayout.NORTH);
+        separateWordsSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
+
+        wildcardSearchPanel.add(new JLabel("Enter search pattern with wildcards (*):"), BorderLayout.NORTH);
+        wildcardSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
+
+        // Add tabs to the tabbed pane
+        searchTabs.addTab("Exact", exactSearchPanel);
+        searchTabs.addTab("Separate Words", separateWordsSearchPanel);
+        searchTabs.addTab("Wildcards", wildcardSearchPanel);
+
+        // Results list initialization
+        resultList = new JList<>();
+        JScrollPane listScrollPane = new JScrollPane(resultList);
+        listScrollPane.setBorder(BorderFactory.createTitledBorder("Search Results"));
+
+        // Directory chooser section
         JPanel fileSelectionPanel = new JPanel(new BorderLayout());
-        chosenPathDisplay = new JTextArea(10, 20);
+        chosenPathDisplay = new JTextArea(5, 20);
         chosenPathDisplay.setEditable(false);
         JScrollPane pathScrollPane = new JScrollPane(chosenPathDisplay);
         pathScrollPane.setBorder(BorderFactory.createTitledBorder("Chosen Path"));
-        fileSelectionPanel.add(pathScrollPane, BorderLayout.NORTH);
-
-        chooseButton = new JButton("Choose Directory or File");
         chooseButton.addActionListener(e -> chooseDirectoryOrFile());
+        fileSelectionPanel.add(pathScrollPane, BorderLayout.CENTER);
         fileSelectionPanel.add(chooseButton, BorderLayout.SOUTH);
 
-        JPanel searchPanel = new JPanel(new BorderLayout());
-        searchField = new JTextField(20);
-        searchPanel.add(searchField, BorderLayout.NORTH);
+        // Assembling the main layout
+        add(searchTabs, BorderLayout.NORTH);
+        add(listScrollPane, BorderLayout.CENTER);
+        add(fileSelectionPanel, BorderLayout.EAST);
 
-        searchButton = new JButton("Search");
+        // Adjust search button to trigger search based on active tab
         searchButton.addActionListener(e -> performSearch());
-        searchPanel.add(searchButton, BorderLayout.SOUTH);
+        JPanel searchButtonPanel = new JPanel();
+        searchButtonPanel.add(searchButton);
+        add(searchButtonPanel, BorderLayout.SOUTH);
 
-        resultList = new JList<>();
-        searchPanel.add(new JScrollPane(resultList), BorderLayout.CENTER);
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileSelectionPanel, searchPanel);
-        splitPane.setOneTouchExpandable(true);
-        splitPane.setDividerLocation(400);
-
-        add(splitPane, BorderLayout.CENTER);
+        pack(); // Adjust window size to fit all components
     }
+
 
     /**
      * Opens a file chooser to select a directory or file for indexing and searching.
