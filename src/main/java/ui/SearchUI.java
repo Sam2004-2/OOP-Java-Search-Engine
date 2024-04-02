@@ -11,7 +11,7 @@ import java.util.List;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import core.Indexer;
+import core.Search;
 
 /**
  * SearchUI provides a graphical user interface for a file search tool.
@@ -19,19 +19,15 @@ import core.Indexer;
  * and view files that match the search term along with the number of occurrences.
  */
 public class SearchUI extends JFrame {
-    private JTextField searchField; // Text field for entering search terms
-    private JButton searchButton, chooseButton; // Buttons for initiating search and choosing file/directory
-    private JList<String> resultList; // List displaying search results
-    private Indexer indexer; // Indexer instance for performing searches
-    private JTextArea chosenPathDisplay; // Displays selected file or directory path
-    private Set<String> selectedFiles = new HashSet<>(); // Holds the paths of selected files
+    private JTextField searchField;
+    private JButton searchButton, chooseButton;
+    private JList<String> resultList;
+    private Search search;
+    private JTextArea chosenPathDisplay;
+    private Set<String> selectedFiles = new HashSet<>();
 
-    /**
-     * Constructs a SearchUI frame with a given indexer.
-     * @param indexer The indexer to use for searching files.
-     */
-    public SearchUI(Indexer indexer) {
-        this.indexer = indexer;
+    public SearchUI(Search search) {
+        this.search = search;
         initComponents();
         setSize(1000, 600);
         setTitle("Search Tool");
@@ -45,9 +41,7 @@ public class SearchUI extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        JPanel fileSelectionPanel = new JPanel();
-        fileSelectionPanel.setLayout(new BorderLayout());
-
+        JPanel fileSelectionPanel = new JPanel(new BorderLayout());
         chosenPathDisplay = new JTextArea(10, 20);
         chosenPathDisplay.setEditable(false);
         JScrollPane pathScrollPane = new JScrollPane(chosenPathDisplay);
@@ -58,15 +52,11 @@ public class SearchUI extends JFrame {
         chooseButton.addActionListener(e -> chooseDirectoryOrFile());
         fileSelectionPanel.add(chooseButton, BorderLayout.SOUTH);
 
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new BorderLayout());
-
+        JPanel searchPanel = new JPanel(new BorderLayout());
         searchField = new JTextField(20);
-        searchField.setMaximumSize(searchField.getPreferredSize());
         searchPanel.add(searchField, BorderLayout.NORTH);
 
         searchButton = new JButton("Search");
-        searchButton.setEnabled(false);
         searchButton.addActionListener(e -> performSearch());
         searchPanel.add(searchButton, BorderLayout.SOUTH);
 
@@ -140,20 +130,21 @@ public class SearchUI extends JFrame {
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
         selectedFiles.stream()
-            .map(Path::of)
-            .map(Path::getParent)
-            .distinct()
-            .map(Path::toString)
-            .forEach(indexer::indexDirectory);
+                .map(Path::of)
+                .map(Path::getParent)
+                .distinct()
+                .map(Path::toString)
+                .forEach(path -> search.indexDirectory(path)); // Adjusted to use the Search instance
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
+
 
     /**
      * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
      */
     private void performSearch() {
         String query = searchField.getText();
-        List<Map.Entry<String, Integer>> searchResults = indexer.search(query);
+        List<Map.Entry<String, Integer>> searchResults = search.performSearch(query);
 
         if (searchResults.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No results found for \"" + query + "\".", "No Results", JOptionPane.INFORMATION_MESSAGE);
