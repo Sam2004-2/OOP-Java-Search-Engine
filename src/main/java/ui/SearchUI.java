@@ -146,7 +146,6 @@ public class SearchUI extends JFrame {
                             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                                 selectedFiles.remove(file.getAbsolutePath());
                             }
-                            searchButton.setEnabled(!selectedFiles.isEmpty());
                             updateChosenPathDisplay();
                         }
                     });
@@ -196,7 +195,7 @@ public class SearchUI extends JFrame {
         List<Map.Entry<String, Integer>> results;
 
         switch (searchTabs.getSelectedIndex()) {
-            case 0: // 
+            case 0: //
                 results = search.performSearch(term);
                 break;
             case 1: //
