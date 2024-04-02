@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 public class Indexer {
     private Map<String, Map<String, Integer>> index = new HashMap<>();
@@ -41,7 +42,10 @@ public class Indexer {
         }
     }
 
-    public Map<String, Integer> search(String term) {
-        return index.getOrDefault(term.toLowerCase(), Collections.emptyMap());
+    public List<Map.Entry<String, Integer>> search(String term) {
+        Map<String, Integer> results = index.getOrDefault(term.toLowerCase(), Collections.emptyMap());
+        return results.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .collect(Collectors.toList());
     }
 }

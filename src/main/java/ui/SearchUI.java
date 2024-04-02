@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.List;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -51,18 +52,22 @@ public class SearchUI extends JFrame {
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BorderLayout());
 
+        //Create the search field
         searchField = new JTextField(20);
         searchField.setMaximumSize(searchField.getPreferredSize());
         searchPanel.add(searchField, BorderLayout.NORTH);
-
+        
+        //Set the search button to be disabled until a file is selected
         searchButton = new JButton("Search");
         searchButton.setEnabled(false);
         searchButton.addActionListener(e -> performSearch());
         searchPanel.add(searchButton, BorderLayout.SOUTH);
 
+        //Set the result list to be scrollable
         resultList = new JList<>();
         searchPanel.add(new JScrollPane(resultList), BorderLayout.CENTER);
 
+        // Create a split pane to hold the file selection panel and search panel
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileSelectionPanel, searchPanel);
         splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(400);
@@ -92,18 +97,17 @@ public class SearchUI extends JFrame {
         JPanel checkBoxPanel = new JPanel();
         checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS));
         File[] files = directory.listFiles();
-    
         if (files != null) {
             for (File file : files) {
                 if (file.isFile()) {
                     JCheckBox checkBox = new JCheckBox(file.getName());
-                    checkBox.addItemListener(new ItemListener() { // Add item listener to each checkbox
+                    checkBox.addItemListener(new ItemListener() {
                         @Override
                         public void itemStateChanged(ItemEvent e) {
-                            if (e.getStateChange() == ItemEvent.SELECTED) { // Add to selectedFiles if selected
+                            if (e.getStateChange() == ItemEvent.SELECTED) {
                                 System.out.println("Selected: " + file.getName());
                                 selectedFiles.add(file.getAbsolutePath());
-                            } else if (e.getStateChange() == ItemEvent.DESELECTED) { // Remove from selectedFiles if deselected
+                            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                                 System.out.println("Deselected: " + file.getName());
                                 selectedFiles.remove(file.getAbsolutePath());
                             }
@@ -116,7 +120,6 @@ public class SearchUI extends JFrame {
                 }
             }
         }
-    
         JScrollPane scrollPane = new JScrollPane(checkBoxPanel);
         scrollPane.setPreferredSize(new Dimension(400, 200));
         JOptionPane.showMessageDialog(this, scrollPane, "Select Files", JOptionPane.PLAIN_MESSAGE);
@@ -158,13 +161,14 @@ public class SearchUI extends JFrame {
 
     private void performSearch() {
         String query = searchField.getText();
-        Map<String, Integer> searchResults = indexer.search(query);
+        List<Map.Entry<String, Integer>> searchResults = indexer.search(query);
+
 
         if (searchResults.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No results found for \"" + query + "\".", "No Results", JOptionPane.INFORMATION_MESSAGE);
         } else {
             DefaultListModel<String> listModel = new DefaultListModel<>();
-            searchResults.forEach((filePath, count) -> listModel.addElement(filePath + ": " + count + " occurrences"));
+            searchResults.forEach(entry -> listModel.addElement(entry.getKey() + ": " + entry.getValue() + " occurrences"));
             resultList.setModel(listModel);
         }
     }
