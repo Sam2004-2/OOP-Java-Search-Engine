@@ -3,6 +3,7 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -117,7 +118,12 @@ public class SearchUI extends JFrame {
 
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
-        indexer.indexFiles(selectedFiles); 
+        selectedFiles.stream()
+            .map(Path::of)
+            .map(Path::getParent)
+            .distinct()
+            .map(Path::toString)
+            .forEach(indexer::indexDirectory);
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 

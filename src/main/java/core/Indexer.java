@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class Indexer {
-    private Map<String, Set<String>> index = new HashMap<>();
-    private Map<String, Integer> totalWords = new HashMap<>();
+    private Map<String, Map<String, Integer>> index = new HashMap<>();
 
     public void indexDirectory(String directoryPath) {
         try {
@@ -27,7 +26,6 @@ public class Indexer {
 
     private void indexFile(String filePath) throws IOException {
         Pattern pattern = Pattern.compile("\\w+");
-        int totalWordCount = 0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -35,52 +33,15 @@ public class Indexer {
                 Matcher matcher = pattern.matcher(line);
                 while (matcher.find()) {
                     String word = matcher.group().toLowerCase();
-                    index.computeIfAbsent(word, k -> new HashSet<>()).add(filePath);
-                    totalWordCount++;
+                    Map<String, Integer> fileCounts = index.getOrDefault(word, new HashMap<>());
+                    fileCounts.put(filePath, fileCounts.getOrDefault(filePath, 0) + 1);
+                    index.put(word, fileCounts);
                 }
-            }
-        }
-        totalWords.put(filePath, totalWordCount);
-    }
-
-    public void indexFiles(Set<String> filePaths) {
-        for (String filePath : filePaths) {
-            try {
-                indexFile(filePath);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
 
     public Map<String, Integer> search(String term) {
-        Set<String> files = index.getOrDefault(term.toLowerCase(), Collections.emptySet());
-        Map<String, Integer> results = new HashMap<>();
-        for (String file : files) {
-            int count = 0;
-            try {
-                count = countOccurrences(file, term);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            results.put(file, count);
-        }
-        return results;
-    }
-
-    private int countOccurrences(String filePath, String term) throws IOException {
-        Pattern pattern = Pattern.compile("\\b" + term.toLowerCase() + "\\b");
-        int count = 0;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = pattern.matcher(line.toLowerCase());
-                while (matcher.find()) {
-                    count++;
-                }
-            }
-        }
-        return count;
+        return index.getOrDefault(term.toLowerCase(), Collections.emptyMap());
     }
 }
