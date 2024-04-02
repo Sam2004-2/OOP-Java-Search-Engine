@@ -6,9 +6,19 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
 
+/**
+ * The Indexer class provides functionality to index words in text files within a directory,
+ * allowing for a search operation that identifies files containing specific terms.
+ */
 public class Indexer {
     private Map<String, Map<String, Integer>> index = new HashMap<>();
 
+    /**
+     * Indexes all regular files within the specified directory path. 
+     * This method recursively walks through the directory and indexes each file found.
+     * 
+     * @param directoryPath The path of the directory to index.
+     */
     public void indexDirectory(String directoryPath) {
         try {
             Files.walk(Paths.get(directoryPath))
@@ -25,6 +35,13 @@ public class Indexer {
         }
     }
 
+    /**
+     * Indexes a single file, extracting and counting each word within the file.
+     * Each word is indexed along with its occurrence count in the provided file path.
+     * 
+     * @param filePath The path of the file to index.
+     * @throws IOException If an I/O error occurs reading from the file.
+     */
     private void indexFile(String filePath) throws IOException {
         Pattern pattern = Pattern.compile("\\w+");
 
@@ -42,6 +59,13 @@ public class Indexer {
         }
     }
 
+    /**
+     * Searches the indexed data for files containing the specified term.
+     * Returns a list of file paths and their associated occurrence count of the term, sorted by count in descending order.
+     * 
+     * @param term The search term to find within the indexed files.
+     * @return A list of Map entries, where each entry represents a file path and the count of the term's occurrences in that file, sorted by the count in descending order.
+     */
     public List<Map.Entry<String, Integer>> search(String term) {
         Map<String, Integer> results = index.getOrDefault(term.toLowerCase(), Collections.emptyMap());
         return results.entrySet().stream()
