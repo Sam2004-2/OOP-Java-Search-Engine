@@ -5,6 +5,7 @@ import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.List;
@@ -173,20 +174,42 @@ public class SearchUI extends JFrame {
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
+    private void updateSearchResults(List<Map.Entry<String, Integer>> searchResults) {
+        if (searchResults.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            DefaultListModel<String> listModel = new DefaultListModel<>();
+            for (Map.Entry<String, Integer> entry : searchResults) {
+                listModel.addElement(entry.getKey() + ": " + entry.getValue() + " occurrences");
+            }
+            resultList.setModel(listModel);
+        }
+    }
+
 
     /**
      * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
      */
     private void performSearch() {
         String query = searchField.getText();
-        List<Map.Entry<String, Integer>> searchResults = search.performSearch(query);
-
-        if (searchResults.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No results found for \"" + query + "\".", "No Results", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            DefaultListModel<String> listModel = new DefaultListModel<>();
-            searchResults.forEach(entry -> listModel.addElement(entry.getKey() + ": " + entry.getValue() + " occurrences"));
-            resultList.setModel(listModel);
+        List<Map.Entry<String, Integer>> searchResults = new ArrayList<>();
+        // Determine the active tab
+        int selectedIndex = searchTabs.getSelectedIndex();
+        switch (selectedIndex) {
+            case 0: // Exact match
+                searchResults = search.performSearch(query);
+                break;
+            case 1: // Comma-separated words
+                searchResults = search.performCommaSeparatedSearch(query);
+                break;
+            case 2: // Wildcard
+                searchResults = search.performWildcardSearch(query);
+                break;
+            default:
+                JOptionPane.showMessageDialog(this, "Invalid search option.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
         }
+        updateSearchResults(searchResults);
     }
+
 }
