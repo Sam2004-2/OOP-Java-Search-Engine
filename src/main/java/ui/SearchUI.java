@@ -2,13 +2,10 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
 import java.awt.event.ItemEvent;
 
 
@@ -21,9 +18,7 @@ public class SearchUI extends JFrame {
     private JList<String> resultList;
     private Indexer indexer;
     private JTextArea chosenPathDisplay;
-
     private Set<String> selectedFiles = new HashSet<>();
-
 
     public SearchUI(Indexer indexer) {
         this.indexer = indexer;
@@ -31,64 +26,71 @@ public class SearchUI extends JFrame {
         setSize(1000, 600);
         setTitle("Search Tool");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-        });
         setVisible(true);
     }
 
-
     private void initComponents() {
-        JPanel northPanel = new JPanel(new FlowLayout());
-        searchField = new JTextField(20);
-        northPanel.add(searchField);
-
+        setLayout(new BorderLayout());
+    
+        // File selection area
+        JPanel fileSelectionPanel = new JPanel();
+        fileSelectionPanel.setLayout(new BoxLayout(fileSelectionPanel, BoxLayout.Y_AXIS));
+        fileSelectionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
         chosenPathDisplay = new JTextArea(2, 20);
         chosenPathDisplay.setEditable(false);
         JScrollPane pathScrollPane = new JScrollPane(chosenPathDisplay);
         pathScrollPane.setBorder(BorderFactory.createTitledBorder("Chosen Path"));
-        northPanel.add(pathScrollPane);
-
+        fileSelectionPanel.add(pathScrollPane);
+    
         chooseButton = new JButton("Choose Directory or File");
-        chooseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                chooseDirectoryOrFile();
-            }
-        });
-        northPanel.add(chooseButton);
-
-        add(northPanel, BorderLayout.NORTH);
-
+        chooseButton.addActionListener(e -> chooseDirectoryOrFile());
+        fileSelectionPanel.add(chooseButton);
+    
+        add(fileSelectionPanel, BorderLayout.NORTH);
+    
+        // Search area
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
+    
+        searchField = new JTextField(20);
+        searchField.setMaximumSize(searchField.getPreferredSize());
+        searchPanel.add(searchField);
+    
         searchButton = new JButton("Search");
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                performSearch();
-            }
-        });
-        add(searchButton, BorderLayout.SOUTH);
-
+        searchButton.setEnabled(false); // Initially disabled
+        searchButton.addActionListener(e -> performSearch());
+        searchPanel.add(searchButton);
+    
         resultList = new JList<>();
-        add(new JScrollPane(resultList), BorderLayout.CENTER);
+        searchPanel.add(new JScrollPane(resultList));
+    
+        add(searchPanel, BorderLayout.CENTER);
     }
 
     private void chooseDirectoryOrFile() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select Directory");
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        chooser.setAcceptAllFileFilterUsed(true);
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File selectedDirectory = chooser.getSelectedFile();
-            displayFileSelectionCheckboxes(selectedDirectory);
+            File selected = chooser.getSelectedFile();
+            if (selected.isDirectory()) {
+                displayFileSelectionCheckboxes(selected);
+            } else {
+                selectedFiles.add(selected.getAbsolutePath());
+                updateChosenPathDisplay();
+            }
         }
     }
+
 
     private void displayFileSelectionCheckboxes(File directory) {
         JPanel checkBoxPanel = new JPanel();
         checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS));
         File[] files = directory.listFiles();
-
+    
         if (files != null) {
             for (File file : files) {
                 if (file.isFile()) {
@@ -100,30 +102,39 @@ public class SearchUI extends JFrame {
                             selectedFiles.remove(file.getAbsolutePath());
                         }
                         searchButton.setEnabled(!selectedFiles.isEmpty());
+                        updateChosenPathDisplay(); // Update the display and index the files
                     });
                     checkBoxPanel.add(checkBox);
                 }
             }
         }
-
+    
         JScrollPane scrollPane = new JScrollPane(checkBoxPanel);
         scrollPane.setPreferredSize(new Dimension(400, 200));
         JOptionPane.showMessageDialog(this, scrollPane, "Select Files", JOptionPane.PLAIN_MESSAGE);
     }
 
 
+    private void updateChosenPathDisplay() {
+        chosenPathDisplay.setText(String.join("\n", selectedFiles));
+        indexer.indexFiles(selectedFiles); 
+        searchButton.setEnabled(!selectedFiles.isEmpty());
+    }
+
 
     private void performSearch() {
         String query = searchField.getText();
-        Set<String> searchResults = indexer.search(query);
+        Map<String, Integer> searchResults = indexer.search(query);
 
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        searchResults.forEach(listModel::addElement);
-        resultList.setModel(listModel);
-    }
-
-    public static void main(String[] args) {
-        Indexer indexer = new Indexer();
-        new SearchUI(indexer);
+        if (searchResults.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No results found for \"" + query + "\".", "No Results", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            DefaultListModel<String> listModel = new DefaultListModel<>();
+            searchResults.forEach((filePath, count) -> listModel.addElement(filePath + ": " + count + " occurrences"));
+            resultList.setModel(listModel);
+        }
     }
 }
+
+
+

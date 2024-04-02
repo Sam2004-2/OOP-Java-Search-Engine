@@ -8,3 +8,5 @@
 /dataSources.local.xml
 # GitHub Copilot persisted chat sessions
 /copilot/chatSessions
+# Ignore test.txt file
+test.txt

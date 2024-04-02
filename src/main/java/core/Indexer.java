@@ -40,12 +40,47 @@ public class Indexer {
                 }
             }
         }
-
-        // Update the total words count for the file
         totalWords.put(filePath, totalWordCount);
     }
 
-    public Set<String> search(String term) {
-        return index.getOrDefault(term.toLowerCase(), Collections.emptySet());
+    public void indexFiles(Set<String> filePaths) {
+        for (String filePath : filePaths) {
+            try {
+                indexFile(filePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Map<String, Integer> search(String term) {
+        Set<String> files = index.getOrDefault(term.toLowerCase(), Collections.emptySet());
+        Map<String, Integer> results = new HashMap<>();
+        for (String file : files) {
+            int count = 0;
+            try {
+                count = countOccurrences(file, term);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            results.put(file, count);
+        }
+        return results;
+    }
+
+    private int countOccurrences(String filePath, String term) throws IOException {
+        Pattern pattern = Pattern.compile("\\b" + term.toLowerCase() + "\\b");
+        int count = 0;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line.toLowerCase());
+                while (matcher.find()) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }
