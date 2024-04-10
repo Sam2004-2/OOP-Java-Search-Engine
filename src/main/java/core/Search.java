@@ -24,7 +24,11 @@ public class Search {
     }
 
     // New method for wildcard search
-    public List<Map.Entry<String, Integer>> performWildcardSearch(String pattern) {
-        return indexer.searchWithWildcards(pattern);
+    public List<Map.Entry<String, Integer>> performWildcardSearch(String term) {
+        return indexer.searchWithWildcards(term);
+    }
+    
+    public List<Map.Entry<String, Integer>> performHistorySearch() {
+        return indexer.HistorySearch();
     }
 }

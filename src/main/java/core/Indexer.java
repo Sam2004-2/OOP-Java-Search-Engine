@@ -5,6 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
+import core.SpellChecker;
 
 /**
  * The Indexer class provides functionality to index words in text files within a directory,
@@ -112,25 +113,52 @@ public class Indexer {
      * @return Sorted list of search results.
      */
     public List<Map.Entry<String, Integer>> searchWithWildcards(String wildcardPattern) {
+    	
         String regex = wildcardPattern.replace("*", ".*").toLowerCase();
         Pattern pattern = Pattern.compile(regex);
         Map<String, Integer> cumulativeResults = new HashMap<>();
-
         index.keySet().forEach(word -> {
-            // Convert the word from the index to lowercase before matching
+            // Convert the word from the index to lower case before matching
+        	System.out.println("srep4");
             if (pattern.matcher(word.toLowerCase()).matches()) {
                 List<Map.Entry<String, Integer>> results = search(word);
                 results.forEach(entry -> cumulativeResults.merge(entry.getKey(), entry.getValue(), Integer::sum));
+                System.out.println("srep5");
             }
         });
-
+        
+        System.out.println("srep6");
         return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
     }
+    
+	 public List<Map.Entry<String, Integer>> HistorySearch() {
+		 List<Map.Entry<String, Integer>> searchHistory = new ArrayList<>();
+		 
+	        try {
+	            List<String> lines = Files.readAllLines(Paths.get("test.txt"));
+	            // Process each line in the file
+	            for (String line : lines) {
+	                String[] parts = line.split(":");
+	                if (parts.length == 2) {
+	                    String fileName = parts[0].trim();
+	                    int occurrences = Integer.parseInt(parts[1].trim());
+	                    searchHistory.add(new HashMap.SimpleEntry<>(fileName, occurrences));
+	                }
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            // Handle file reading error
+	        } catch (NumberFormatException e) {
+	            e.printStackTrace();
+	            // Handle parsing error
+	        }
 
-    public List<String> suggestCorrections(String term) {
-        return spellChecker.suggestCorrections(term);
-    }
-}
+	        return searchHistory;
+	    }
+	    	
+
+	    }
+    
 
