@@ -198,39 +198,39 @@ public class SearchUI extends JFrame {
      */
     private void performSearch() {
         String term = searchField.getText();
-    List<Map.Entry<String, Integer>> results;
+        List<Map.Entry<String, Integer>> results;
 
-    // Perform spell check and prompt for suggestions if needed
-    List<String> suggestions = spellChecker.suggestCorrections(term);
-    if (!suggestions.isEmpty()) {
-        // Prompt user with suggestions
-        String message = "Did you mean:\n" + String.join("\n", suggestions);
-        int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
-        if (choice == JOptionPane.YES_OPTION) {
-            // User selected a suggestion, update the search term
-            String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
-                    "Select a suggestion:", "Suggested Corrections",
-                    JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
-            if (selectedSuggestion != null) {
-                term = selectedSuggestion;
+        // Perform spell check and prompt for suggestions if needed
+        List<String> suggestions = spellChecker.suggestCorrections(term);
+        if (!suggestions.isEmpty()) {
+            // Prompt user with suggestions
+            String message = "Did you mean:\n" + String.join("\n", suggestions);
+            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                // User selected a suggestion, update the search term
+                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
+                        "Select a suggestion:", "Suggested Corrections",
+                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
+                if (selectedSuggestion != null) {
+                    term = selectedSuggestion;
+                }
             }
         }
-    }
 
-    // Perform the search with the updated term
-    switch (searchTabs.getSelectedIndex()) {
-        case 0: //
-            results = search.performSearch(term);
-            break;
-        case 1: //
-            results = search.performCommaSeparatedSearch(term);
-            break;
-        case 2:
-            results = search.performWildcardSearch(term);
-            break;
-        default:
-            throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+        // Perform the search with the updated term
+        switch (searchTabs.getSelectedIndex()) {
+            case 0: //
+                results = search.performSearch(term);
+                break;
+            case 1: //
+                results = search.performCommaSeparatedSearch(term);
+                break;
+            case 2:
+                results = search.performWildcardSearch(term);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+        }
+        updateSearchResults(results);
     }
-    updateSearchResults(results);
-}
 }

@@ -34,6 +34,7 @@ public class SpellChecker {
             // Term is correct, return empty list
             return suggestions;
         }
+        
         for (String word : dictionary) {
             int distance = calculateLevenshteinDistance(term, word);
             if (distance < minDistance) {
