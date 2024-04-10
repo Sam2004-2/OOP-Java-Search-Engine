@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  */
 public class Indexer {
     private Map<String, Map<String, Integer>> index = new HashMap<>();
-
+    private SpellChecker spellChecker;
     /**
      * Indexes all regular files within the specified directory path.
      * This method recursively walks through the directory and indexes each file found.
@@ -127,6 +127,10 @@ public class Indexer {
         return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
+    }
+
+    public List<String> suggestCorrections(String term) {
+        return spellChecker.suggestCorrections(term);
     }
 }
 

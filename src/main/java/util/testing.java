@@ -11,7 +11,7 @@ public class testing {
 public static void main(String[] args) {
     try {
         // Initialize the indexer
-        Indexer indexer = new Indexer();
+        // Indexer indexer = new Indexer();
 
         // Index the test.txt file
         indexer.indexFile("test.txt");

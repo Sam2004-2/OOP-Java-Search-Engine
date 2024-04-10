@@ -3,14 +3,17 @@ package app;
 import javax.swing.SwingUtilities;
 import core.Indexer;
 import core.Search;  // Make sure this import is correct
+import core.SpellChecker;
 import ui.SearchUI;
 
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Indexer indexer = new Indexer();
+            String dictionaryPath = "resources/words.txt";
+            Indexer indexer = new Indexer(dictionaryPath);
             Search search = new Search(indexer);
-            SearchUI searchUI = new SearchUI(search);
+            SpellChecker spellChecker = new SpellChecker(dictionaryPath); // Create instance of SpellChecker
+            SearchUI searchUI = new SearchUI(search, indexer, spellChecker);
             searchUI.setVisible(true);
         });
     }

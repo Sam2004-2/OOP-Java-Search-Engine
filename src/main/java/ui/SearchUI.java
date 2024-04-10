@@ -12,6 +12,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import core.Search;
+import core.SpellChecker;
 
 /**
  * SearchUI provides a graphical user interface for a file search tool.
@@ -26,9 +27,11 @@ public class SearchUI extends JFrame {
     private JTextArea chosenPathDisplay;
     private Set<String> selectedFiles = new HashSet<>();
     private JTabbedPane searchTabs;
+    private SpellChecker spellChecker;
 
-    public SearchUI(Search search) {
+    public SearchUI(Search search, SpellChecker spellChecker) {
         this.search = search;
+        this.spellChecker = spellChecker;
         initComponents();
         setSize(1000, 600);
         setTitle("Search Tool");
@@ -42,6 +45,8 @@ public class SearchUI extends JFrame {
         button.addActionListener(e -> performSearch());
         return button;
     }
+
+
 
     /**
      * Initializes the components of the UI including layout, panels, and event listeners.
@@ -97,6 +102,7 @@ public class SearchUI extends JFrame {
         add(fileSelectionPanel, BorderLayout.EAST);
 
 
+        searchButton = createSearchButton();
         exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
@@ -208,6 +214,38 @@ public class SearchUI extends JFrame {
                 throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }
         updateSearchResults(results);
+    
+
+    List<String> suggestions = spellChecker.suggestCorrections(term);
+    if (!suggestions.isEmpty()) {
+        // Prompt user with suggestions
+        String message = "Did you mean:\n" + String.join("\n", suggestions);
+        int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION) {
+            // User selected a suggestion, update the search term
+            String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
+                    "Select a suggestion:", "Suggested Corrections",
+                    JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
+            if (selectedSuggestion != null) {
+                term = selectedSuggestion;
+            }
+        }
     }
 
+    // Perform the search with the updated term
+    switch (searchTabs.getSelectedIndex()) {
+        case 0: //
+            results = search.performSearch(term);
+            break;
+        case 1: //
+            results = search.performCommaSeparatedSearch(term);
+            break;
+        case 2:
+            results = search.performWildcardSearch(term);
+            break;
+        default:
+            throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+    }
+    updateSearchResults(results);
+}
 }
