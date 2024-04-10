@@ -29,7 +29,11 @@ public class SpellChecker {
     public List<String> suggestCorrections(String term) {
         List<String> suggestions = new ArrayList<>();
         int minDistance = Integer.MAX_VALUE;
-
+        
+        if (dictionary.contains(term.toLowerCase())) {
+            // Term is correct, return empty list
+            return suggestions;
+        }
         for (String word : dictionary) {
             int distance = calculateLevenshteinDistance(term, word);
             if (distance < minDistance) {

@@ -198,24 +198,9 @@ public class SearchUI extends JFrame {
      */
     private void performSearch() {
         String term = searchField.getText();
-        List<Map.Entry<String, Integer>> results;
+    List<Map.Entry<String, Integer>> results;
 
-        switch (searchTabs.getSelectedIndex()) {
-            case 0: //
-                results = search.performSearch(term);
-                break;
-            case 1: //
-                results = search.performCommaSeparatedSearch(term);
-                break;
-            case 2:
-                results = search.performWildcardSearch(term);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
-        }
-        updateSearchResults(results);
-    
-
+    // Perform spell check and prompt for suggestions if needed
     List<String> suggestions = spellChecker.suggestCorrections(term);
     if (!suggestions.isEmpty()) {
         // Prompt user with suggestions
