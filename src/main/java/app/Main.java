@@ -1,3 +1,9 @@
+/**
+ * This is the main class of the application.
+ * It initializes the necessary components for the search functionality,
+ * including the indexer, search engine, spell checker, and user interface.
+ * The main method creates instances of these components and starts the search user interface.
+ */
 package app;
 
 import javax.swing.SwingUtilities;

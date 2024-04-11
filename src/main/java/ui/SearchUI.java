@@ -82,8 +82,11 @@ public class SearchUI extends JFrame {
         wildcardSearchPanel.add(new JLabel("Enter search pattern with wildcards (*):"), BorderLayout.NORTH);
         wildcardSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
         
+<<<<<<< Updated upstream
         SearchHistorySearchPanel.add(new JLabel("Enter search to view history:"), BorderLayout.NORTH);
 
+=======
+>>>>>>> Stashed changes
         searchTabs.addTab("Exact", exactSearchPanel);
         searchTabs.addTab("Separate Words", separateWordsSearchPanel);
         searchTabs.addTab("Wildcards", wildcardSearchPanel);
@@ -185,6 +188,15 @@ public class SearchUI extends JFrame {
                 .forEach(path -> search.indexDirectory(path));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
+    
+    
+    /**
+     * Updates the search results display based on the provided list of search results.
+     * If the search results list is empty, a message dialog indicating no results is displayed.
+     * Otherwise, the search results are formatted and added to a DefaultListModel,
+     * which is then set as the model for the resultList JList component.
+     * @param searchResults The list of map entries containing search results.
+     */
 
     private void updateSearchResults(List<Map.Entry<String, Integer>> searchResults) {
         if (searchResults.isEmpty()) {

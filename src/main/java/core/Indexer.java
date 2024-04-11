@@ -17,7 +17,6 @@ public class Indexer {
     /**
      * Indexes all regular files within the specified directory path.
      * This method recursively walks through the directory and indexes each file found.
-     *
      * @param directoryPath The path of the directory to index.
      */
     public void indexDirectory(String directoryPath) {
@@ -83,8 +82,6 @@ public class Indexer {
     }
 
 
-    // These are new methods for Advanced Searches yet to be fully implemented
-
     /**
      * Searches the indexed data for files containing any of the comma-separated words.
      * @param terms Comma-separated search terms.
@@ -119,7 +116,10 @@ public class Indexer {
         Map<String, Integer> cumulativeResults = new HashMap<>();
         index.keySet().forEach(word -> {
             // Convert the word from the index to lower case before matching
+<<<<<<< Updated upstream
         	System.out.println("srep4");
+=======
+>>>>>>> Stashed changes
             if (pattern.matcher(word.toLowerCase()).matches()) {
                 List<Map.Entry<String, Integer>> results = search(word);
                 results.forEach(entry -> cumulativeResults.merge(entry.getKey(), entry.getValue(), Integer::sum));
@@ -127,11 +127,15 @@ public class Indexer {
             }
         });
         
+<<<<<<< Updated upstream
         System.out.println("srep6");
+=======
+>>>>>>> Stashed changes
         return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
     }
+<<<<<<< Updated upstream
     
 	 public List<Map.Entry<String, Integer>> HistorySearch() {
 		 List<Map.Entry<String, Integer>> searchHistory = new ArrayList<>();
@@ -160,5 +164,8 @@ public class Indexer {
 	    	
 
 	    }
+=======
+    }
+>>>>>>> Stashed changes
     
 
