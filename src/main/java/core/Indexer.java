@@ -116,56 +116,21 @@ public class Indexer {
         Map<String, Integer> cumulativeResults = new HashMap<>();
         index.keySet().forEach(word -> {
             // Convert the word from the index to lower case before matching
-<<<<<<< Updated upstream
-        	System.out.println("srep4");
-=======
->>>>>>> Stashed changes
             if (pattern.matcher(word.toLowerCase()).matches()) {
                 List<Map.Entry<String, Integer>> results = search(word);
                 results.forEach(entry -> cumulativeResults.merge(entry.getKey(), entry.getValue(), Integer::sum));
-                System.out.println("srep5");
+
             }
         });
         
-<<<<<<< Updated upstream
-        System.out.println("srep6");
-=======
->>>>>>> Stashed changes
         return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
     }
-<<<<<<< Updated upstream
     
-	 public List<Map.Entry<String, Integer>> HistorySearch() {
-		 List<Map.Entry<String, Integer>> searchHistory = new ArrayList<>();
-		 
-	        try {
-	            List<String> lines = Files.readAllLines(Paths.get("test.txt"));
-	            // Process each line in the file
-	            for (String line : lines) {
-	                String[] parts = line.split(":");
-	                if (parts.length == 2) {
-	                    String fileName = parts[0].trim();
-	                    int occurrences = Integer.parseInt(parts[1].trim());
-	                    searchHistory.add(new HashMap.SimpleEntry<>(fileName, occurrences));
-	                }
-	            }
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	            // Handle file reading error
-	        } catch (NumberFormatException e) {
-	            e.printStackTrace();
-	            // Handle parsing error
-	        }
 
-	        return searchHistory;
-	    }
-	    	
 
-	    }
-=======
     }
->>>>>>> Stashed changes
+
     
 

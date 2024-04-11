@@ -30,7 +30,6 @@ public class SearchUI extends JFrame {
     private Set<String> selectedFiles = new HashSet<>();
     private JTabbedPane searchTabs;
     private SpellChecker spellChecker;
-    private JButton searchHistoryButton;
 
     public SearchUI(Search search, SpellChecker spellChecker) {
         this.search = search;
@@ -69,7 +68,6 @@ public class SearchUI extends JFrame {
         JPanel exactSearchPanel = new JPanel(new BorderLayout());
         JPanel separateWordsSearchPanel = new JPanel(new BorderLayout());
         JPanel wildcardSearchPanel = new JPanel(new BorderLayout());
-        JPanel SearchHistorySearchPanel = new JPanel(new BorderLayout());
 
 
         exactSearchPanel.add(new JLabel("Enter exact phrase:"), BorderLayout.NORTH);
@@ -82,15 +80,9 @@ public class SearchUI extends JFrame {
         wildcardSearchPanel.add(new JLabel("Enter search pattern with wildcards (*):"), BorderLayout.NORTH);
         wildcardSearchPanel.add(new JTextField(20), BorderLayout.CENTER); // Separate field if needed
         
-<<<<<<< Updated upstream
-        SearchHistorySearchPanel.add(new JLabel("Enter search to view history:"), BorderLayout.NORTH);
-
-=======
->>>>>>> Stashed changes
         searchTabs.addTab("Exact", exactSearchPanel);
         searchTabs.addTab("Separate Words", separateWordsSearchPanel);
         searchTabs.addTab("Wildcards", wildcardSearchPanel);
-        searchTabs.addTab("History", SearchHistorySearchPanel);
 
         resultList = new JList<>();
         JScrollPane listScrollPane = new JScrollPane(resultList);
@@ -116,8 +108,7 @@ public class SearchUI extends JFrame {
         exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
-        SearchHistorySearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
-        
+    
         pack();
     }
 
@@ -229,9 +220,6 @@ public class SearchUI extends JFrame {
             case 2:
                 results = search.performWildcardSearch(term);
                 break;
-            case 3:
-            	results = search.performHistorySearch();
-            	break;
             default:
                 throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }

@@ -35,27 +35,20 @@ public class Search {
 
     /**
      * Performs a search for comma-separated words.
-     * @return A list of map entries containing search results.
+     * @return A list of map entries 
+    /**g search results.
      */
     public List<Map.Entry<String, Integer>> performCommaSeparatedSearch(String terms) {
         return indexer.searchCommaSeparatedWords(terms);
     }
 
-<<<<<<< Updated upstream
-    // New method for wildcard search
+    /*
+    * Performs a wildcard search using the specified pattern.
+    * @return A list of map entries containing search results.
+    */
+
     public List<Map.Entry<String, Integer>> performWildcardSearch(String term) {
         return indexer.searchWithWildcards(term);
     }
-    
-    public List<Map.Entry<String, Integer>> performHistorySearch() {
-        return indexer.HistorySearch();
-=======
-    /**
-     * Performs a wildcard search using the specified pattern.
-     * @return A list of map entries containing search results.
-     */
-    public List<Map.Entry<String, Integer>> performWildcardSearch(String pattern) {
-        return indexer.searchWithWildcards(pattern);
->>>>>>> Stashed changes
-    }
+   
 }
