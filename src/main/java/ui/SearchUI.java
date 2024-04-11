@@ -48,7 +48,9 @@ public class SearchUI extends JFrame {
         return button;
     }
 
-    // Initialize components of the UI
+    /**
+     * Initializes the components of the UI including layout, panels, and event listeners.
+     */
     private void initComponents() {
         setLayout(new BorderLayout(10, 10)); // Set layout
 
@@ -119,7 +121,9 @@ public class SearchUI extends JFrame {
         pack(); // Pack components
     }
 
-    // Method to handle choosing directory or file
+    /**
+     * Opens a file chooser to select a directory or file for indexing and searching.
+     */
     private void chooseDirectoryOrFile() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select Directory");
@@ -137,7 +141,10 @@ public class SearchUI extends JFrame {
         }
     }
 
-    // Method to display checkboxes for file selection
+    /**
+     * Displays a dialog with checkboxes for selecting individual files within a directory.
+     * @param directory The directory from which to display files.
+     */
     private void displayFileSelectionCheckboxes(File directory) {
         JPanel checkBoxPanel = new JPanel();
         checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS));
@@ -167,7 +174,9 @@ public class SearchUI extends JFrame {
         JOptionPane.showMessageDialog(this, scrollPane, "Select Files", JOptionPane.PLAIN_MESSAGE);
     }
 
-    // Method to update chosen path display
+    /**
+     * Updates the display of chosen paths and re-indexes the selected directories or files.
+     */
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
         selectedFiles.stream()
@@ -203,7 +212,7 @@ public class SearchUI extends JFrame {
             // Iterate over each search result
             searchResults.forEach(entry -> {
                 // Format the search result information into a display text
-                String displayText = String.format("%s - Occurrences %d", searchTerm, entry.getValue());
+                String displayText = String.format("Search term: %s - Occurrences %d", searchTerm, entry.getValue());
                 // Add the display text to the search history list model
                 listModel.addElement(displayText);
             });
@@ -213,7 +222,9 @@ public class SearchUI extends JFrame {
         searchHistoryList.setModel(listModel);
     }
 
-    // Method to perform search
+    /**
+     * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
+     */
     private void performSearch() {
         String term = searchField.getText();
         List<Map.Entry<String, Integer>> results;
@@ -271,4 +282,3 @@ public class SearchUI extends JFrame {
         updateSearchResults(results);
     }
 }
-
