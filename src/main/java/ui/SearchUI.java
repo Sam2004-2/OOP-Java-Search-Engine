@@ -203,7 +203,7 @@ public class SearchUI extends JFrame {
             // Iterate over each search result
             searchResults.forEach(entry -> {
                 // Format the search result information into a display text
-                String displayText = String.format("Search term: %s - Occurrences %d", searchTerm, entry.getValue());
+                String displayText = String.format("%s - Occurrences %d", searchTerm, entry.getValue());
                 // Add the display text to the search history list model
                 listModel.addElement(displayText);
             });
