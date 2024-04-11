@@ -105,8 +105,9 @@ public class SearchUI extends JFrame {
         separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
         wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
 
-        // Search history list
-        searchHistoryList = new JList<>();
+        // Search history list with DefaultListModel
+        DefaultListModel<String> searchHistoryListModel = new DefaultListModel<>();
+        searchHistoryList = new JList<>(searchHistoryListModel);
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
 
@@ -193,17 +194,23 @@ public class SearchUI extends JFrame {
     }
 
     // Method to update search history
-    private void updateSearchHistory(List<Map.Entry<String, Integer>> searchResults) {
-        if (searchResults.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            DefaultListModel<String> listModel = new DefaultListModel<>();
+    private void updateSearchHistory(String searchTerm, List<Map.Entry<String, Integer>> searchResults) {
+        // Create a new DefaultListModel to store the search history entries
+        DefaultListModel<String> listModel = (DefaultListModel<String>) searchHistoryList.getModel();
+
+        // If the search results are not empty
+        if (!searchResults.isEmpty()) {
+            // Iterate over each search result
             searchResults.forEach(entry -> {
-                String displayText = String.format("Search term: %s - Occurrences: %d", entry.getKey(), entry.getValue());
+                // Format the search result information into a display text
+                String displayText = String.format("Search term: %s - Occurrences %d", searchTerm, entry.getValue());
+                // Add the display text to the search history list model
                 listModel.addElement(displayText);
             });
-            searchHistoryList.setModel(listModel);
         }
+
+        // Set the new list model as the model for the search history JList
+        searchHistoryList.setModel(listModel);
     }
 
     // Method to perform search
@@ -224,10 +231,12 @@ public class SearchUI extends JFrame {
             default:
                 throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }
+
+        // Update search results
         updateSearchResults(results);
 
         // Update search history
-        updateSearchHistory(results);
+        updateSearchHistory(term, results);
 
         List<String> suggestions = spellChecker.suggestCorrections(term);
         if (!suggestions.isEmpty()) {
