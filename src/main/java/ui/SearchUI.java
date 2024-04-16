@@ -115,24 +115,16 @@ public class SearchUI extends JFrame {
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
 
-        // Add search history display next to search results
-        JPanel searchHistoryPanel = new JPanel(new BorderLayout());
-        searchHistoryPanel.add(historyScrollPane, BorderLayout.CENTER);
-        add(searchHistoryPanel, BorderLayout.WEST); // Adding to the left side of the layout
-        
-        // Search history list with DefaultListModel
-        DefaultListModel<String> graphmodel = new DefaultListModel<>();
-        GraphList = new JList<>(graphmodel);
-        JScrollPane graphScrollPane = new JScrollPane(GraphList);
-        graphScrollPane.setBorder(BorderFactory.createTitledBorder("Word Graph"));
 
-        // Add search history display next to search results
-        JPanel graphPanel = new JPanel(new BorderLayout());
-        graphPanel.add(graphScrollPane, BorderLayout.CENTER);
-        add(graphPanel, BorderLayout.NORTH); // Adding to the left side of the layout
-        
-        graphPanel = new GraphPanel();
-        add(graphPanel, BorderLayout.SOUTH); // Add the graph panel to the frame
+        // Word graph panel
+        JPanel wordGraphPanel = new JPanel(new BorderLayout());
+        wordGraphPanel.setBorder(BorderFactory.createTitledBorder("Word Graph"));
+
+        // Add search history and word graph panels
+        JPanel leftPanel = new JPanel(new GridLayout(2, 1));
+        leftPanel.add(historyScrollPane);
+        leftPanel.add(wordGraphPanel);
+        add(leftPanel, BorderLayout.WEST);
 
         pack(); // Pack components
     }
@@ -195,12 +187,7 @@ public class SearchUI extends JFrame {
      */
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
-        selectedFiles.stream()
-                .map(Path::of)
-                .map(Path::getParent)
-                .distinct()
-                .map(Path::toString)
-                .forEach(path -> search.indexDirectory(path));
+        selectedFiles.forEach(file -> search.indexDirectory(file));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
