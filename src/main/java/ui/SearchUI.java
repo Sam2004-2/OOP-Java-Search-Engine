@@ -179,12 +179,7 @@ public class SearchUI extends JFrame {
      */
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
-        selectedFiles.stream()
-                .map(Path::of)
-                .map(Path::getParent)
-                .distinct()
-                .map(Path::toString)
-                .forEach(path -> search.indexDirectory(path));
+        selectedFiles.forEach(file -> search.indexDirectory(file));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
