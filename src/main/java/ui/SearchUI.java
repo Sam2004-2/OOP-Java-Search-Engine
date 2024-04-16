@@ -3,8 +3,6 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.nio.file.Path;
-import java.security.KeyStore.Entry;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,13 +22,12 @@ public class SearchUI extends JFrame {
     // Components
     private JTextField searchField;
     private JButton searchButton, chooseButton;
-    private JList<String> resultList, searchHistoryList, GraphList;
+    private JList<String> resultList, searchHistoryList;
     private JTextArea chosenPathDisplay;
     private Search search;
     private Set<String> selectedFiles = new HashSet<>();
     private JTabbedPane searchTabs;
     private SpellChecker spellChecker;
-    private GraphPanel graphPanel; // Added GraphPanel instance
 
     // Constructor
     public SearchUI(Search search, SpellChecker spellChecker) {
@@ -115,16 +112,10 @@ public class SearchUI extends JFrame {
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
 
-
-        // Word graph panel
-        JPanel wordGraphPanel = new JPanel(new BorderLayout());
-        wordGraphPanel.setBorder(BorderFactory.createTitledBorder("Word Graph"));
-
-        // Add search history and word graph panels
-        JPanel leftPanel = new JPanel(new GridLayout(2, 1));
-        leftPanel.add(historyScrollPane);
-        leftPanel.add(wordGraphPanel);
-        add(leftPanel, BorderLayout.WEST);
+        // Add search history display next to search results
+        JPanel searchHistoryPanel = new JPanel(new BorderLayout());
+        searchHistoryPanel.add(historyScrollPane, BorderLayout.CENTER);
+        add(searchHistoryPanel, BorderLayout.WEST); // Adding to the left side of the layout
 
         pack(); // Pack components
     }
@@ -187,7 +178,11 @@ public class SearchUI extends JFrame {
      */
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
-        selectedFiles.forEach(file -> search.indexDirectory(file));
+        selectedFiles.stream()
+                .map(File::new)
+                .map(File::getParent)
+                .distinct()
+                .forEach(path -> search.indexDirectory(path));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
@@ -202,10 +197,8 @@ public class SearchUI extends JFrame {
                 listModel.addElement(displayText);
             });
             resultList.setModel(listModel);
-            graphPanel.updateGraph(searchResults); // Update the graph with search results
         }
-        }
-    
+    }
 
     // Method to update search history
     private void updateSearchHistory(String searchTerm, List<Map.Entry<String, Integer>> searchResults) {
@@ -253,86 +246,6 @@ public class SearchUI extends JFrame {
 
         // Update search history
         updateSearchHistory(term, results);
-
-        List<String> suggestions = spellChecker.suggestCorrections(term);
-        if (!suggestions.isEmpty()) {
-            // Prompt user with suggestions
-            String message = "Did you mean:\n" + String.join("\n", suggestions);
-            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
-            if (choice == JOptionPane.YES_OPTION) {
-                // User selected a suggestion, update the search term
-                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
-                        "Select a suggestion:", "Suggested Corrections",
-                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
-                if (selectedSuggestion != null) {
-                    term = selectedSuggestion;
-                }
-            }
-        }
-
-        // Perform the search with the updated term
-        switch (searchTabs.getSelectedIndex()) {
-            case 0:
-                results = search.performSearch(term);
-                break;
-            case 1:
-                results = search.performCommaSeparatedSearch(term);
-                break;
-            case 2:
-                results = search.performWildcardSearch(term);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
-        }
-        updateSearchResults(results);
-    }
-    /**
-     * Panel for displaying a graph of search results.
-     */
-    private class GraphPanel extends JPanel {
-        private List<Map.Entry<String, Integer>> searchResults;
-
-        public void updateGraph(List<Map.Entry<String, Integer>> searchResults) {
-            this.searchResults = searchResults;
-            repaint();
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-
-            if (searchResults == null || searchResults.isEmpty()) {
-                return;
-            }
-
-            int width = getWidth();
-            int height = getHeight();
-
-            // Draw x and y axis
-            g.drawLine(50, height - 50, 50, 50); // y-axis
-            g.drawLine(50, height - 50, width - 50, height - 50); // x-axis
-
-            // Draw data points and connect them with lines
-            int maxOccurrences = searchResults.stream().mapToInt(entry -> entry.getValue()).max().orElse(0);
-            int xInc = (width - 100) / (searchResults.size() - 1);
-            int yInc = (height - 100) / maxOccurrences;
-
-            int i = 0;
-            int prevX = -1, prevY = -1;
-            for (Map.Entry<String, Integer> entry : searchResults) {
-                int x = 50 + i * xInc;
-                int y = height - 50 - entry.getValue() * yInc;
-
-                if (prevX != -1 && prevY != -1) {
-                    g.drawLine(prevX, prevY, x, y);
-                }
-
-                g.fillOval(x - 2, y - 2, 4, 4);
-                prevX = x;
-                prevY = y;
-                i++;
-            }
-        }
     }
 
     public static void main(String[] args) {
