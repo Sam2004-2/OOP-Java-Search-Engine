@@ -2,13 +2,16 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.List;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
+
+
 
 import core.Search;
 import core.SpellChecker;
@@ -28,8 +31,14 @@ public class SearchUI extends JFrame {
     private Set<String> selectedFiles = new HashSet<>();
     private JTabbedPane searchTabs;
     private SpellChecker spellChecker;
+    private JFrame pieChartFrame;
 
-    // Constructor
+    /**
+     * Constructor for SearchUI class.
+     * Initializes the components and sets up the frame.
+     * @param search The search object used for performing searches.
+     * @param spellChecker The spell checker object used for suggesting corrections.
+     */
     public SearchUI(Search search, SpellChecker spellChecker) {
         this.search = search;
         this.spellChecker = spellChecker;
@@ -38,6 +47,16 @@ public class SearchUI extends JFrame {
         setTitle("Search Tool");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+        
+        // Initialize PieChart frame
+        pieChartFrame = new JFrame("Pie Chart");
+        pieChartFrame.setSize(400, 400);
+        pieChartFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close only the pie chart frame
+        pieChartFrame.setVisible(true);
+        
+        // Initialize PieChart
+        PieChart pieChart = new PieChart();
+        pieChartFrame.add(pieChart); // Add the PieChart to the pie chart frame
     }
 
     // Create search button with ActionListener
@@ -112,10 +131,8 @@ public class SearchUI extends JFrame {
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
 
-        // Add search history display next to search results
-        JPanel searchHistoryPanel = new JPanel(new BorderLayout());
-        searchHistoryPanel.add(historyScrollPane, BorderLayout.CENTER);
-        add(searchHistoryPanel, BorderLayout.WEST); // Adding to the left side of the layout
+        // Add search history panel
+        add(historyScrollPane, BorderLayout.WEST);
 
         pack(); // Pack components
     }
@@ -178,15 +195,14 @@ public class SearchUI extends JFrame {
      */
     private void updateChosenPathDisplay() {
         chosenPathDisplay.setText(String.join("\n", selectedFiles));
-        selectedFiles.stream()
-                .map(File::new)
-                .map(File::getParent)
-                .distinct()
-                .forEach(path -> search.indexDirectory(path));
+        selectedFiles.forEach(file -> search.indexDirectory(file));
         searchButton.setEnabled(!selectedFiles.isEmpty());
     }
 
-    // Method to update search results
+    /**
+     * Updates the search results list based on the search results.
+     * @param searchResults The list of search results to display.
+     */
     private void updateSearchResults(List<Map.Entry<String, Integer>> searchResults) {
         if (searchResults.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
@@ -200,24 +216,27 @@ public class SearchUI extends JFrame {
         }
     }
 
-    // Method to update search history
+    /**
+     * Updates the search history list based on the search term and results.
+     * @param searchTerm The search term used in the search.
+     * @param searchResults The list of search results.
+     */
     private void updateSearchHistory(String searchTerm, List<Map.Entry<String, Integer>> searchResults) {
-        // Create a new DefaultListModel to store the search history entries
         DefaultListModel<String> listModel = (DefaultListModel<String>) searchHistoryList.getModel();
-
-        // If the search results are not empty
         if (!searchResults.isEmpty()) {
-            // Iterate over each search result
             searchResults.forEach(entry -> {
-                // Format the search result information into a display text
                 String displayText = String.format("Search term: %s - Occurrences %d", searchTerm, entry.getValue());
-                // Add the display text to the search history list model
                 listModel.addElement(displayText);
             });
         }
-
-        // Set the new list model as the model for the search history JList
         searchHistoryList.setModel(listModel);
+        String[] history = new String[listModel.size()];
+        listModel.copyInto(history);
+        pieChartFrame.getContentPane().removeAll(); // Clear previous chart
+        PieChart pieChart = new PieChart();
+        pieChart.updateChart(history);
+        pieChartFrame.add(pieChart); // Add the updated PieChart to the pie chart frame
+        pieChartFrame.revalidate(); // Refresh the frame
     }
 
     /**
@@ -241,19 +260,52 @@ public class SearchUI extends JFrame {
                 throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }
 
-        // Update search results
         updateSearchResults(results);
-
-        // Update search history
         updateSearchHistory(term, results);
+
+        List<String> suggestions = spellChecker.suggestCorrections(term);
+        if (!suggestions.isEmpty()) {
+            String message = "Did you mean:\n" + String.join("\n", suggestions);
+            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
+                        "Select a suggestion:", "Suggested Corrections",
+                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
+                if (selectedSuggestion != null) {
+                    term = selectedSuggestion;
+                }
+            }
+        }
+
+        switch (searchTabs.getSelectedIndex()) {
+            case 0:
+                results = search.performSearch(term);
+                break;
+            case 1:
+                results = search.performCommaSeparatedSearch(term);
+                break;
+            case 2:
+                results = search.performWildcardSearch(term);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+        }
+        updateSearchResults(results);
     }
 
-    public static void main(String[] args) {
-        // Instantiate Search and SpellChecker objects
-        Search search = new Search(null); // Pass appropriate argument if needed
-        SpellChecker spellChecker = new SpellChecker("hi"); // Constructor without arguments
-
-        // Create and display the UI
-        SwingUtilities.invokeLater(() -> new SearchUI(search, spellChecker));
+    /**
+     * Converts the array of search history strings into a map.
+     * @param searchHistory The array of search history strings.
+     * @return A map containing search terms and their occurrences.
+     */
+    private Map<String, Integer> convertToMap(String[] searchHistory) {
+        Map<String, Integer> map = new HashMap<>();
+        for (String entry : searchHistory) {
+            String[] parts = entry.split(" - ");
+            String searchTerm = parts[0].split(": ")[1];
+            int occurrences = Integer.parseInt(parts[1].split(" ")[1]);
+            map.put(searchTerm, occurrences);
+        }
+        return map;
     }
 }
