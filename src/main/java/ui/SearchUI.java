@@ -113,10 +113,15 @@ public class SearchUI extends JFrame {
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
 
-        // Add search history display next to search results
-        JPanel searchHistoryPanel = new JPanel(new BorderLayout());
-        searchHistoryPanel.add(historyScrollPane, BorderLayout.CENTER);
-        add(searchHistoryPanel, BorderLayout.WEST); // Adding to the left side of the layout
+        // Word graph panel
+        JPanel wordGraphPanel = new JPanel(new BorderLayout());
+        wordGraphPanel.setBorder(BorderFactory.createTitledBorder("Word Graph"));
+
+        // Add search history and word graph panels
+        JPanel leftPanel = new JPanel(new GridLayout(2, 1));
+        leftPanel.add(historyScrollPane);
+        leftPanel.add(wordGraphPanel);
+        add(leftPanel, BorderLayout.WEST);
 
         pack(); // Pack components
     }
