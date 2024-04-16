@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
+import java.security.KeyStore.Entry;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,12 +24,13 @@ public class SearchUI extends JFrame {
     // Components
     private JTextField searchField;
     private JButton searchButton, chooseButton;
-    private JList<String> resultList, searchHistoryList;
+    private JList<String> resultList, searchHistoryList, GraphList;
     private JTextArea chosenPathDisplay;
     private Search search;
     private Set<String> selectedFiles = new HashSet<>();
     private JTabbedPane searchTabs;
     private SpellChecker spellChecker;
+    private GraphPanel graphPanel; // Added GraphPanel instance
 
     // Constructor
     public SearchUI(Search search, SpellChecker spellChecker) {
@@ -117,6 +119,20 @@ public class SearchUI extends JFrame {
         JPanel searchHistoryPanel = new JPanel(new BorderLayout());
         searchHistoryPanel.add(historyScrollPane, BorderLayout.CENTER);
         add(searchHistoryPanel, BorderLayout.WEST); // Adding to the left side of the layout
+        
+        // Search history list with DefaultListModel
+        DefaultListModel<String> graphmodel = new DefaultListModel<>();
+        GraphList = new JList<>(graphmodel);
+        JScrollPane graphScrollPane = new JScrollPane(GraphList);
+        graphScrollPane.setBorder(BorderFactory.createTitledBorder("Word Graph"));
+
+        // Add search history display next to search results
+        JPanel graphPanel = new JPanel(new BorderLayout());
+        graphPanel.add(graphScrollPane, BorderLayout.CENTER);
+        add(graphPanel, BorderLayout.NORTH); // Adding to the left side of the layout
+        
+        graphPanel = new GraphPanel();
+        add(graphPanel, BorderLayout.SOUTH); // Add the graph panel to the frame
 
         pack(); // Pack components
     }
@@ -199,8 +215,10 @@ public class SearchUI extends JFrame {
                 listModel.addElement(displayText);
             });
             resultList.setModel(listModel);
+            graphPanel.updateGraph(searchResults); // Update the graph with search results
         }
-    }
+        }
+    
 
     // Method to update search history
     private void updateSearchHistory(String searchTerm, List<Map.Entry<String, Integer>> searchResults) {
@@ -280,5 +298,62 @@ public class SearchUI extends JFrame {
                 throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
         }
         updateSearchResults(results);
+    }
+    /**
+     * Panel for displaying a graph of search results.
+     */
+    private class GraphPanel extends JPanel {
+        private List<Map.Entry<String, Integer>> searchResults;
+
+        public void updateGraph(List<Map.Entry<String, Integer>> searchResults) {
+            this.searchResults = searchResults;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            if (searchResults == null || searchResults.isEmpty()) {
+                return;
+            }
+
+            int width = getWidth();
+            int height = getHeight();
+
+            // Draw x and y axis
+            g.drawLine(50, height - 50, 50, 50); // y-axis
+            g.drawLine(50, height - 50, width - 50, height - 50); // x-axis
+
+            // Draw data points and connect them with lines
+            int maxOccurrences = searchResults.stream().mapToInt(entry -> entry.getValue()).max().orElse(0);
+            int xInc = (width - 100) / (searchResults.size() - 1);
+            int yInc = (height - 100) / maxOccurrences;
+
+            int i = 0;
+            int prevX = -1, prevY = -1;
+            for (Map.Entry<String, Integer> entry : searchResults) {
+                int x = 50 + i * xInc;
+                int y = height - 50 - entry.getValue() * yInc;
+
+                if (prevX != -1 && prevY != -1) {
+                    g.drawLine(prevX, prevY, x, y);
+                }
+
+                g.fillOval(x - 2, y - 2, 4, 4);
+                prevX = x;
+                prevY = y;
+                i++;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Instantiate Search and SpellChecker objects
+        Search search = new Search(null); // Pass appropriate argument if needed
+        SpellChecker spellChecker = new SpellChecker("hi"); // Constructor without arguments
+
+        // Create and display the UI
+        SwingUtilities.invokeLater(() -> new SearchUI(search, spellChecker));
     }
 }
