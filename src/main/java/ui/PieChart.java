@@ -10,14 +10,14 @@ import java.util.HashMap;
  */
 public class PieChart extends JPanel {
     private Map<String, Integer> data;
-    private Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.ORANGE, Color.CYAN};
+    private Color[] colors = {Color.PINK, Color.BLUE, Color.RED, Color.YELLOW, Color.ORANGE, Color.CYAN};
 
     /**
      * Constructor for PieChart.
      * Sets the preferred size of the panel.
      */
     public PieChart() {
-        this.setPreferredSize(new Dimension(400, 300));
+        this.setPreferredSize(new Dimension(500, 500));
     }
 
     /**
@@ -52,7 +52,6 @@ public class PieChart extends JPanel {
             int arcAngle = (int) ((double) entry.getValue() / total * 360);
             g.setColor(colors[index % colors.length]);
             g.fillArc(100, 50, 200, 200, startAngle, arcAngle);
-            drawPieChartLabels(g, entry.getKey(), startAngle, arcAngle);
             startAngle += arcAngle;
             index++;
         }
