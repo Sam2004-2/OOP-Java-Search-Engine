@@ -5,6 +5,10 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+
 
 /**
  * The Indexer class provides functionality to index words in text files within a directory,
@@ -12,6 +16,8 @@ import java.util.stream.Collectors;
  */
 public class Indexer {
     private Map<String, Map<String, Integer>> index = new HashMap<>();
+
+
     private SpellChecker spellChecker;
     /**
      * Indexes all regular files within the specified directory path.
