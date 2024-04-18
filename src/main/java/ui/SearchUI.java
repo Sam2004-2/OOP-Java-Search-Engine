@@ -24,7 +24,6 @@ import core.SpellChecker;
  */
 public class SearchUI extends JFrame {
     // Components
-    private JTextField searchField;
     private JButton searchButton, chooseButton;
     private JList<String> resultList, searchHistoryList;
     private JTextArea chosenPathDisplay;
@@ -244,85 +243,71 @@ public class SearchUI extends JFrame {
      * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
      */
     private void performSearch() {
-        String term = null;
-        switch (searchTabs.getSelectedIndex()) {
+        String term;
+        int tabIndex = searchTabs.getSelectedIndex();
+    
+        // Get the appropriate search term based on the selected tab
+        switch (tabIndex) {
             case 0:
-                term = exactSearchField.getText();
+                term = exactSearchField.getText().trim();
                 break;
             case 1:
-                term = separateWordsSearchField.getText();
+                term = separateWordsSearchField.getText().trim();
                 break;
             case 2:
-                term = wildcardSearchField.getText();
+                term = wildcardSearchField.getText().trim();
                 break;
             default:
                 LOGGER.log(Level.SEVERE, "Unexpected tab selection");
                 JOptionPane.showMessageDialog(this, "Unexpected tab selection.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
         }
-        if (term == null || term.isEmpty()) {
+    
+        if (term.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a search term.", "Empty Search Term", JOptionPane.WARNING_MESSAGE);
             return;
         }
     
-        List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term);
-        if (results == null || results.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            updateSearchResults(results);
-            updateSearchHistory(term, results);
-        }
-
-        updateSearchResults(results);
-        updateSearchHistory(term, results);
-
+        LOGGER.log(Level.INFO, "Starting search for: {0}", term);
+    
+        // Spell checking
         List<String> suggestions = spellChecker.suggestCorrections(term);
-        if (!suggestions.isEmpty()) {
-            String message = "Did you mean:\n" + String.join("\n", suggestions);
-            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
-            if (choice == JOptionPane.YES_OPTION) {
-                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
-                        "Select a suggestion:", "Suggested Corrections",
-                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
-                if (selectedSuggestion != null) {
-                    term = selectedSuggestion;
-                }
-                switch (searchTabs.getSelectedIndex()) {
-                    case 0:
-                        results = search.performSearch(term);
-                        break;
-                    case 1:
-                        results = search.performCommaSeparatedSearch(term);
-                        break;
-                    case 2:
-                        results = search.performWildcardSearch(term);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
-                }
-                updateSearchResults(results);
+        if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
+            suggestions.add("Continue with '" + term + "'");
+            String chosenSuggestion = (String) JOptionPane.showInputDialog(this,
+                    "Did you mean:",
+                    "Spell Check Suggestion",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    suggestions.toArray(),
+                    suggestions.get(0));
+            if (chosenSuggestion != null && !chosenSuggestion.equals("Continue with '" + term + "'")) {
+                term = chosenSuggestion; // User chose to use a suggested correction
             }
         }
-
+    
+        // Perform search again with the corrected or confirmed term
+        List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term, tabIndex);
+        updateSearchResults(results);
+        updateSearchHistory(term, results);
+    
+        LOGGER.log(Level.INFO, "Search completed with term: {0}", term);
     }
     
-
-    private List<Map.Entry<String, Integer>> performSearchBasedOnTab(String term) {
-        switch (searchTabs.getSelectedIndex()) {
+    private List<Map.Entry<String, Integer>> performSearchBasedOnTab(String term, int tabIndex) {
+        switch (tabIndex) {
             case 0:
-                LOGGER.log(Level.FINE, "Performing exact search for: {0}", term);
                 return search.performSearch(term);
             case 1:
-                LOGGER.log(Level.FINE, "Performing comma-separated search for: {0}", term);
                 return search.performCommaSeparatedSearch(term);
             case 2:
-                LOGGER.log(Level.FINE, "Performing wildcard search for: {0}", term);
                 return search.performWildcardSearch(term);
             default:
-                LOGGER.log(Level.SEVERE, "Unexpected tab selection");
-                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+                LOGGER.log(Level.SEVERE, "Unexpected tab index: {0}", tabIndex);
+                throw new IllegalStateException("Unexpected tab index: " + tabIndex);
         }
     }
+    
     
 
     /**
