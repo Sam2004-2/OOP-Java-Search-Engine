@@ -10,7 +10,8 @@ import java.util.List;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 
 import core.Search;
@@ -32,6 +33,9 @@ public class SearchUI extends JFrame {
     private JTabbedPane searchTabs;
     private SpellChecker spellChecker;
     private JFrame pieChartFrame;
+    private static final Logger LOGGER = Logger.getLogger(SearchUI.class.getName());
+    private JTextField exactSearchField, separateWordsSearchField, wildcardSearchField;
+
 
     /**
      * Constructor for SearchUI class.
@@ -70,73 +74,71 @@ public class SearchUI extends JFrame {
      * Initializes the components of the UI including layout, panels, and event listeners.
      */
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10)); // Set layout
 
-        // Search field
-        searchField = new JTextField(20);
-
-        // Choose directory or file button
-        chooseButton = new JButton("Choose Directory or File");
-
-        // Tabs for different search types
-        searchTabs = new JTabbedPane();
-
-        // Panels for different search types
+        setLayout(new BorderLayout(10, 10)); // Set the layout for the frame
+    
+        // Initialize search fields for each tab
+        exactSearchField = new JTextField(20);
+        separateWordsSearchField = new JTextField(20);
+        wildcardSearchField = new JTextField(20);
+    
+        // Create panels for each type of search
         JPanel exactSearchPanel = new JPanel(new BorderLayout());
         JPanel separateWordsSearchPanel = new JPanel(new BorderLayout());
         JPanel wildcardSearchPanel = new JPanel(new BorderLayout());
-
-        // Labels and text fields for different search types
+    
+        // Setup exact search panel
         exactSearchPanel.add(new JLabel("Enter exact phrase:"), BorderLayout.NORTH);
-        exactSearchPanel.add(searchField, BorderLayout.CENTER);
+        exactSearchPanel.add(exactSearchField, BorderLayout.CENTER);
+        exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH); // Add search button to panel
+    
+        // Setup separate words search panel
         separateWordsSearchPanel.add(new JLabel("Enter words, separated by commas:"), BorderLayout.NORTH);
-        separateWordsSearchPanel.add(new JTextField(20), BorderLayout.CENTER);
+        separateWordsSearchPanel.add(separateWordsSearchField, BorderLayout.CENTER);
+        separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH); // Add search button to panel
+    
+        // Setup wildcard search panel
         wildcardSearchPanel.add(new JLabel("Enter search pattern with wildcards (*):"), BorderLayout.NORTH);
-        wildcardSearchPanel.add(new JTextField(20), BorderLayout.CENTER);
-
-        // Add panels to tabs
+        wildcardSearchPanel.add(wildcardSearchField, BorderLayout.CENTER);
+        wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH); // Add search button to panel
+    
+        // Initialize the tabbed pane and add the panels as tabs
+        searchTabs = new JTabbedPane();
         searchTabs.addTab("Exact", exactSearchPanel);
         searchTabs.addTab("Separate Words", separateWordsSearchPanel);
         searchTabs.addTab("Wildcards", wildcardSearchPanel);
-
-        // Result list
+    
+        // Result display area
         resultList = new JList<>();
         JScrollPane listScrollPane = new JScrollPane(resultList);
         listScrollPane.setBorder(BorderFactory.createTitledBorder("Search Results"));
-
-        // File selection panel
+    
+        // File selection and display panel
         JPanel fileSelectionPanel = new JPanel(new BorderLayout());
         chosenPathDisplay = new JTextArea(5, 20);
         chosenPathDisplay.setEditable(false);
         JScrollPane pathScrollPane = new JScrollPane(chosenPathDisplay);
         pathScrollPane.setBorder(BorderFactory.createTitledBorder("Chosen Path"));
+        chooseButton = new JButton("Choose Directory or File");
         chooseButton.addActionListener(e -> chooseDirectoryOrFile());
         fileSelectionPanel.add(pathScrollPane, BorderLayout.CENTER);
         fileSelectionPanel.add(chooseButton, BorderLayout.SOUTH);
-
-        // Add components to the frame
+    
+        // Add components to the main frame
         add(searchTabs, BorderLayout.NORTH);
         add(listScrollPane, BorderLayout.CENTER);
         add(fileSelectionPanel, BorderLayout.EAST);
-
-        // Add search button to each search type panel
-        searchButton = createSearchButton();
-        exactSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
-        separateWordsSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
-        wildcardSearchPanel.add(createSearchButton(), BorderLayout.SOUTH);
-
-        // Search history list with DefaultListModel
+    
+        // Search history setup
         DefaultListModel<String> searchHistoryListModel = new DefaultListModel<>();
         searchHistoryList = new JList<>(searchHistoryListModel);
         JScrollPane historyScrollPane = new JScrollPane(searchHistoryList);
         historyScrollPane.setBorder(BorderFactory.createTitledBorder("Search History"));
-
-        // Add search history panel
         add(historyScrollPane, BorderLayout.WEST);
-
-        pack(); // Pack components
+    
+        pack(); // Pack the components neatly
     }
-
+    
     /**
      * Opens a file chooser to select a directory or file for indexing and searching.
      */
@@ -243,55 +245,55 @@ public class SearchUI extends JFrame {
      * Performs a search based on the text entered into the searchField and updates the resultList with the search results.
      */
     private void performSearch() {
-        String term = searchField.getText();
-        List<Map.Entry<String, Integer>> results;
-
+        String term = null;
         switch (searchTabs.getSelectedIndex()) {
             case 0:
-                results = search.performSearch(term);
+                term = exactSearchField.getText();
                 break;
             case 1:
-                results = search.performCommaSeparatedSearch(term);
+                term = separateWordsSearchField.getText();
                 break;
             case 2:
-                results = search.performWildcardSearch(term);
+                term = wildcardSearchField.getText();
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+                LOGGER.log(Level.SEVERE, "Unexpected tab selection");
+                JOptionPane.showMessageDialog(this, "Unexpected tab selection.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
         }
-
-        updateSearchResults(results);
-        updateSearchHistory(term, results);
-
-        List<String> suggestions = spellChecker.suggestCorrections(term);
-        if (!suggestions.isEmpty()) {
-            String message = "Did you mean:\n" + String.join("\n", suggestions);
-            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
-            if (choice == JOptionPane.YES_OPTION) {
-                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
-                        "Select a suggestion:", "Suggested Corrections",
-                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
-                if (selectedSuggestion != null) {
-                    term = selectedSuggestion;
-                }
-            }
+    
+        if (term == null || term.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a search term.", "Empty Search Term", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-
-        switch (searchTabs.getSelectedIndex()) {
-            case 0:
-                results = search.performSearch(term);
-                break;
-            case 1:
-                results = search.performCommaSeparatedSearch(term);
-                break;
-            case 2:
-                results = search.performWildcardSearch(term);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+    
+        List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term);
+        if (results == null || results.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            updateSearchResults(results);
+            updateSearchHistory(term, results);
         }
-        updateSearchResults(results);
     }
+    
+
+    private List<Map.Entry<String, Integer>> performSearchBasedOnTab(String term) {
+        switch (searchTabs.getSelectedIndex()) {
+            case 0:
+                LOGGER.log(Level.FINE, "Performing exact search for: {0}", term);
+                return search.performSearch(term);
+            case 1:
+                LOGGER.log(Level.FINE, "Performing comma-separated search for: {0}", term);
+                return search.performCommaSeparatedSearch(term);
+            case 2:
+                LOGGER.log(Level.FINE, "Performing wildcard search for: {0}", term);
+                return search.performWildcardSearch(term);
+            default:
+                LOGGER.log(Level.SEVERE, "Unexpected tab selection");
+                throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+        }
+    }
+    
 
     /**
      * Converts the array of search history strings into a map.
