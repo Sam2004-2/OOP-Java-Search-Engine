@@ -260,7 +260,6 @@ public class SearchUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Unexpected tab selection.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
         }
-    
         if (term == null || term.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a search term.", "Empty Search Term", JOptionPane.WARNING_MESSAGE);
             return;
@@ -273,6 +272,38 @@ public class SearchUI extends JFrame {
             updateSearchResults(results);
             updateSearchHistory(term, results);
         }
+
+        updateSearchResults(results);
+        updateSearchHistory(term, results);
+
+        List<String> suggestions = spellChecker.suggestCorrections(term);
+        if (!suggestions.isEmpty()) {
+            String message = "Did you mean:\n" + String.join("\n", suggestions);
+            int choice = JOptionPane.showConfirmDialog(this, message, "Spell Check", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                String selectedSuggestion = (String) JOptionPane.showInputDialog(this,
+                        "Select a suggestion:", "Suggested Corrections",
+                        JOptionPane.PLAIN_MESSAGE, null, suggestions.toArray(), suggestions.get(0));
+                if (selectedSuggestion != null) {
+                    term = selectedSuggestion;
+                }
+                switch (searchTabs.getSelectedIndex()) {
+                    case 0:
+                        results = search.performSearch(term);
+                        break;
+                    case 1:
+                        results = search.performCommaSeparatedSearch(term);
+                        break;
+                    case 2:
+                        results = search.performWildcardSearch(term);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + searchTabs.getSelectedIndex());
+                }
+                updateSearchResults(results);
+            }
+        }
+
     }
     
 

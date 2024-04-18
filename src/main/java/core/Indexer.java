@@ -90,21 +90,29 @@ public class Indexer {
      * @return Sorted list of search results.
      */
     public List<Map.Entry<String, Integer>> searchCommaSeparatedWords(String terms) {
-        Set<String> words = Arrays.stream(terms.split(","))
-                                  .map(String::trim)
-                                  .map(String::toLowerCase)
-                                  .collect(Collectors.toSet());
+        // Split the comma-separated terms, trim and convert to lowercase
+        String[] termArray = terms.split(",");
+        Set<String> words = Arrays.stream(termArray)
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        // Initialize a map to hold the cumulative results
         Map<String, Integer> cumulativeResults = new HashMap<>();
 
+        // Perform a single search operation for all words in the list
         words.forEach(word -> {
             List<Map.Entry<String, Integer>> results = search(word);
+            // Aggregate the results for each file
             results.forEach(entry -> cumulativeResults.merge(entry.getKey(), entry.getValue(), Integer::sum));
         });
 
+        // Sort and return the aggregated results
         return cumulativeResults.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toList());
     }
+
 
     /**
      * Searches the indexed data for files matching the wildcard pattern.
