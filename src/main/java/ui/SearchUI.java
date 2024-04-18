@@ -246,7 +246,7 @@ public class SearchUI extends JFrame {
         String term;
         int tabIndex = searchTabs.getSelectedIndex();
     
-        // Get the appropriate search term based on the selected tab
+        // Determine the appropriate search term based on the selected tab
         switch (tabIndex) {
             case 0:
                 term = exactSearchField.getText().trim();
@@ -268,39 +268,44 @@ public class SearchUI extends JFrame {
             return;
         }
     
-        LOGGER.log(Level.INFO, "Starting search for: {0}", term);
-    
-        // Spell checking
-        List<String> suggestions = spellChecker.suggestCorrections(term);
-        if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
-            suggestions.add("Continue with '" + term + "'");
-            String chosenSuggestion = (String) JOptionPane.showInputDialog(this,
-                    "Did you mean:",
-                    "Spell Check Suggestion",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    suggestions.toArray(),
-                    suggestions.get(0));
-            if (chosenSuggestion != null && !chosenSuggestion.equals("Continue with '" + term + "'")) {
-                term = chosenSuggestion; // User chose to use a suggested correction
+        // Perform initial search with the current term
+        List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term, tabIndex);
+        if (results.isEmpty()) {
+            LOGGER.log(Level.INFO, "No results found, initiating spell check for term: {0}", term);
+            // Perform spell checking since no results were found
+            List<String> suggestions = spellChecker.suggestCorrections(term);
+            if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
+                suggestions.add("Continue with '" + term + "'");
+                String chosenSuggestion = (String) JOptionPane.showInputDialog(this,
+                        "Did you mean:",
+                        "Spell Check Suggestion",
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        suggestions.toArray(),
+                        suggestions.get(0));
+                if (chosenSuggestion != null && !chosenSuggestion.equals("Continue with '" + term + "'")) {
+                    term = chosenSuggestion; // User chose to use a suggested correction
+                    // Re-search with the new term
+                    results = performSearchBasedOnTab(term, tabIndex);
+                }
             }
         }
     
-        // Perform search again with the corrected or confirmed term
-        List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term, tabIndex);
         updateSearchResults(results);
         updateSearchHistory(term, results);
-    
         LOGGER.log(Level.INFO, "Search completed with term: {0}", term);
     }
     
     private List<Map.Entry<String, Integer>> performSearchBasedOnTab(String term, int tabIndex) {
         switch (tabIndex) {
             case 0:
+                LOGGER.log(Level.FINE, "Performing exact search for: {0}", term);
                 return search.performSearch(term);
             case 1:
+                LOGGER.log(Level.FINE, "Performing comma-separated search for: {0}", term);
                 return search.performCommaSeparatedSearch(term);
             case 2:
+                LOGGER.log(Level.FINE, "Performing wildcard search for: {0}", term);
                 return search.performWildcardSearch(term);
             default:
                 LOGGER.log(Level.SEVERE, "Unexpected tab index: {0}", tabIndex);
