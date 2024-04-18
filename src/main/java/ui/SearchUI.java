@@ -74,7 +74,6 @@ public class SearchUI extends JFrame {
      * Initializes the components of the UI including layout, panels, and event listeners.
      */
     private void initComponents() {
-
         setLayout(new BorderLayout(10, 10)); // Set the layout for the frame
     
         // Initialize search fields for each tab
