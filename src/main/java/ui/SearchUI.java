@@ -157,6 +157,9 @@ public class SearchUI extends JFrame {
         }
     }
 
+    
+    
+
     /**
      * Displays a dialog with checkboxes for selecting individual files within a directory.
      * @param directory The directory from which to display files.
@@ -272,7 +275,6 @@ public class SearchUI extends JFrame {
         List<Map.Entry<String, Integer>> results = performSearchBasedOnTab(term, tabIndex);
         if (results.isEmpty()) {
             LOGGER.log(Level.INFO, "No results found, initiating spell check for term: {0}", term);
-            // Perform spell checking since no results were found
             List<String> suggestions = spellChecker.suggestCorrections(term);
             if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
                 suggestions.add("Continue with '" + term + "'");
