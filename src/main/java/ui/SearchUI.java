@@ -3,6 +3,7 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
@@ -112,11 +113,11 @@ public class SearchUI extends JFrame {
     
 
     private void performSearch() {
-        String term;
+        String term = null;
         List<Map.Entry<String, Integer>> results = null;
+        int tabIndex = searchTabs.getSelectedIndex();
     
-        // Determine which search tab is active and get the appropriate text field content
-        switch (searchTabs.getSelectedIndex()) {
+        switch (tabIndex) {
             case 0:
                 term = exactSearchField.getText();
                 break;
@@ -131,43 +132,55 @@ public class SearchUI extends JFrame {
                 return;
         }
     
-        // Check for spelling suggestions before performing the search
-        if (term != null && !term.isEmpty()) {
-            List<String> suggestions = spellChecker.suggestCorrections(term);
-            if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
-                // Suggest corrections
-                int choice = JOptionPane.showOptionDialog(this,
-                                                          "Did you mean: " + suggestions + " ?",
-                                                          "Spell Check Suggestion",
-                                                          JOptionPane.YES_NO_OPTION,
-                                                          JOptionPane.QUESTION_MESSAGE,
-                                                          null, suggestions.toArray(), suggestions.get(0));
-                if (choice != JOptionPane.CLOSED_OPTION) {
-                    term = suggestions.get(choice);
-                }
-            }
-            // Perform the search with the corrected or verified term
-            switch (searchTabs.getSelectedIndex()) {
-                case 0:
-                    results = search.performSearch(term);
-                    break;
-                case 1:
-                    results = search.performCommaSeparatedSearch(term);
-                    break;
-                case 2:
-                    results = search.performWildcardSearch(term);
-                    break;
-            }
+        if (term == null || term.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a search term.", "Empty Search Term", JOptionPane.WARNING_MESSAGE);
+            LOGGER.log(Level.WARNING, "No search term provided.");
+            return;
         }
+    
+    
+        results = performSearchBasedOnTab(term, tabIndex);
+
+                // Spell checking and handling user choice
+                List<String> suggestions = spellChecker.suggestCorrections(term);
+                if (!suggestions.isEmpty() && !suggestions.contains(term.toLowerCase())) {
+                    suggestions.add("Continue with '" + term + "'");
+                    String chosenSuggestion = (String) JOptionPane.showInputDialog(this,
+                                                                                   "Did you mean:",
+                                                                                   "Spell Check Suggestion",
+                                                                                   JOptionPane.QUESTION_MESSAGE,
+                                                                                   null,
+                                                                                   suggestions.toArray(),
+                                                                                   suggestions.get(0));
+                    if (chosenSuggestion == null || chosenSuggestion.equals("Continue with '" + term + "'")) {
+                        chosenSuggestion = term;  // User chose to continue with their original term or cancelled
+                    }
+                    term = chosenSuggestion;
+                }
     
         if (results == null || results.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No results found for the query.", "No Results", JOptionPane.INFORMATION_MESSAGE);
-            LOGGER.log(Level.WARNING, "No search results found.");
+            LOGGER.log(Level.INFO, "No search results found.");
         } else {
             updateSearchResults(results);
             updateSearchHistory(term, results);
         }
     }
+    
+    
+    private List<Map.Entry<String, Integer>> performSearchBasedOnTab(String term, int tabIndex) {
+        switch (tabIndex) {
+            case 0:
+                return search.performSearch(term);
+            case 1:
+                return search.performCommaSeparatedSearch(term);
+            case 2:
+                return search.performWildcardSearch(term);
+            default:
+                return null; // This should never be reached
+        }
+    }
+
     
 
     private void updateSearchResults(List<Map.Entry<String, Integer>> searchResults) {
@@ -187,23 +200,36 @@ public class SearchUI extends JFrame {
 
     private void updateSearchHistory(String searchTerm, List<Map.Entry<String, Integer>> searchResults) {
         DefaultListModel<String> listModel = (DefaultListModel<String>) searchHistoryList.getModel();
-        if (!searchResults.isEmpty()) {
-            searchResults.forEach(entry -> {
-                String displayText = String.format("Search term: %s - Occurrences %d", searchTerm, entry.getValue());
-                listModel.addElement(displayText);
-            });
+        HashMap<String, Integer> fileOccurrences = new HashMap<>();
+    
+        for (Map.Entry<String, Integer> entry : searchResults) {
+            String displayText = String.format("Search term: %s - File: %s - Occurrences: %d", searchTerm, entry.getKey(), entry.getValue());
+            listModel.addElement(displayText);
+    
+            // Collect data for pie chart
+            fileOccurrences.put(entry.getKey(), entry.getValue());
         }
+    
         searchHistoryList.setModel(listModel);
-        String[] history = new String[listModel.size()];
-        listModel.copyInto(history);
+    
+        // Update pie chart
+        updatePieChart(fileOccurrences);
+    }
+    
+    private void updatePieChart(HashMap<String, Integer> data) {
         pieChartFrame.getContentPane().removeAll();
-        PieChart pieChart = new PieChart();
-        pieChart.updateChart(history);
+        pieChart = new PieChart();
+        
+        // Convert the HashMap keys to an array of String
+        Set<String> keySet = data.keySet();
+        String[] dataArray = keySet.toArray(new String[keySet.size()]);
+        
+        pieChart.updateChart(dataArray);
         pieChartFrame.add(pieChart);
         pieChartFrame.revalidate();
-        LOGGER.log(Level.INFO, "Search history updated and pie chart refreshed.");
+        LOGGER.log(Level.INFO, "Pie chart refreshed with new data.");
     }
-
+    
     private void chooseDirectoryOrFile() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select Directory");
